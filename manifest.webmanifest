@@ -1,6 +1,6 @@
 {
-  "name": "رفيق حفظ البقرة",
-  "short_name": "حفظ البقرة",
+  "name": "رفيق حفظ القرآن",
+  "short_name": "حفظ القرآن",
   "lang": "ar", "dir": "rtl",
   "start_url": "./", "scope": "./",
   "display": "standalone",

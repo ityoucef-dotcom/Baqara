@@ -1,5 +1,5 @@
 /* offline cache for the Baqarah companion: app shell precached, recitations cached on demand or by "download all" */
-const SHELL = "shell-d7249a54", AUDIO = "audio-v1";
+const SHELL = "shell-5d10fa98", AUDIO = "audio-v1";
 const SHELL_FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "adhan/madinah.mp3"];
 
 self.addEventListener("install", e => {
@@ -25,16 +25,17 @@ async function ranged(req, res){
 
 self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
-  if (req.method !== "GET" || url.origin !== location.origin) return;
+  const remote = url.hostname === "raw.githubusercontent.com" && /\/Husary_Mujawwad_64kbps\/\d{6}\.mp3$/.test(url.pathname);
+  if (req.method !== "GET" || (url.origin !== location.origin && !remote)) return;
   const isMedia = /\.mp3$/.test(url.pathname);
   if (isMedia){
     e.respondWith((async () => {
       const key = url.origin + url.pathname;
       let hit = await caches.match(key);
       if (!hit){
-        const net = await fetch(key);
+        const net = await fetch(key, remote ? {mode:"cors"} : undefined);
         if (!net.ok) return net;
-        if (/\/audio\//.test(url.pathname)){ const c = await caches.open(AUDIO); await c.put(key, net.clone()); }
+        if (remote || /\/audio\//.test(url.pathname)){ const c = await caches.open(AUDIO); await c.put(key, net.clone()); }
         hit = net;
       }
       return ranged(req, hit);

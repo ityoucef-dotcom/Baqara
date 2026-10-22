@@ -1,15 +1,20 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>window.OFFLINE=true;</script><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="حفظ البقرة"><meta name="theme-color" content="#0b4d3b"><title>رفيق حفظ البقرة</title>
 <script>
 /* installable app: service worker, home-screen hints, download-all for offline listening */
 (function(){
   const N = 286, AUDIO = "audio-v1";
   const url = i => `audio/002${String(i).padStart(3,"0")}.mp3`;
+  let busy = false;
   const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
-  let busy = false;
+  if ("serviceWorker" in navigator){
+    // a new version takes over: reload once so the fresh page is shown
+    const had = !!navigator.serviceWorker.controller; let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if (had && !reloaded && !busy){ reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(()=>{});
+  }
 
   async function count(){
     if (!("caches" in window)) return 0;
@@ -732,6 +737,91 @@ body{background:var(--pat) repeat,var(--bg)}
 .qibla b.deg{font-family:var(--f-d);font-size:1.6rem}
 @media (max-width:480px){.qibla{grid-template-columns:1fr;justify-items:center;text-align:center}}
 .wake.on{background:var(--accent-soft);border-color:var(--accent)}
+/* app shell */
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 4px}
+.ab-t{display:flex;align-items:center;gap:10px;min-width:0}
+.ab-t b{font-family:var(--f-d);font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ab-star{width:22px;height:22px;flex:none;background:linear-gradient(135deg,var(--accent),var(--gold));clip-path:var(--star)}
+.ab-act{display:flex;gap:6px}
+.abtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink);box-shadow:var(--shadow)}
+.abtn:hover{border-color:var(--accent)}
+.abtn:active,.bn:active,.qb:active,.tile:active{transform:scale(.96)}
+
+.bnav{display:none}
+.fab{position:fixed;z-index:15;inset-inline-end:max(16px,env(safe-area-inset-left,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--raised);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s,transform .2s}
+.fab.on{opacity:1;pointer-events:auto;transform:none}
+body.has-player .fab{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+
+#toast{position:fixed;z-index:60;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:99px;padding:8px 18px;font-size:.9rem;transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* quick actions */
+.qa{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.qb{display:grid;justify-items:center;gap:6px;padding:14px 6px 12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);font-size:.85rem;font-weight:500;color:var(--ink);-webkit-tap-highlight-color:transparent;transition:transform .1s,border-color .2s}
+.qb:hover{border-color:var(--accent)}
+.qi{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(160deg,var(--accent),var(--accent-2));color:var(--accent-ink);box-shadow:0 0 0 3px var(--surface),0 0 0 4px color-mix(in srgb,var(--illum,#c9a24a) 60%,transparent)}
+.qi .ic{width:22px;height:22px}
+.qb.ok .qi{background:var(--good)}
+#qaAdk .qi{background:linear-gradient(160deg,var(--gold),#c79c3e);color:#fff}
+#qaAdk.ok .qi{background:var(--good)}
+.szbox{gap:6px!important}
+
+/* bottom sheet */
+.sheet{position:fixed;inset:0;z-index:50}
+.sh-bg{position:absolute;inset:0;background:rgb(0 0 0 / .4);opacity:0;transition:opacity .2s}
+.sh-in{position:absolute;inset:auto 0 0 0;margin:0 auto;max-width:620px;max-height:85vh;overflow:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;transform:translateY(100%);transition:transform .22s ease-out;box-shadow:0 -10px 40px rgb(0 0 0 / .25);border-top:2px solid var(--illum,#c9a24a)}
+.sheet.on .sh-bg{opacity:1}.sheet.on .sh-in{transform:none}
+.sh-grip{width:44px;height:5px;border-radius:99px;background:var(--line);margin:0 auto}
+#shBody{display:grid;gap:14px}
+body.sheet-open{overflow:hidden}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{display:grid;justify-items:center;gap:8px;padding:14px 6px;border-radius:16px;border:1px solid var(--line);background:var(--raised);font-size:.85rem;text-align:center;line-height:1.4}
+.tile.on{border-color:var(--accent);background:var(--accent-soft)}
+.ti{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.ti .ic{width:22px;height:22px}
+.set{display:grid;gap:8px}
+.set-r{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:14px;padding:10px 12px;font-size:.92rem}
+
+/* reading mode: only the mushaf, with a floating control bar */
+.readbar{display:none}
+body.reading .hero,body.reading #appbar,body.reading .tabs,body.reading #pstrip,body.reading .bnav,body.reading .fab,body.reading .save,
+body.reading #view .wrap>*:not(.rd-panel),body.reading .rd-panel>*:not(.mushaf):not(#vtools){display:none!important}
+body.reading .rd-panel{border:0;box-shadow:none;background:none;padding:0}
+body.reading{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+body.reading.has-player{padding-bottom:calc(270px + env(safe-area-inset-bottom,0px))}
+body.reading .readbar{display:flex;position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));gap:6px;background:var(--raised);border:1px solid var(--illum,#c9a24a);border-radius:99px;padding:6px;box-shadow:0 8px 30px rgb(0 0 0 / .25)}
+body.reading.has-player .readbar{bottom:calc(190px + env(safe-area-inset-bottom,0px))}
+.readbar .rb{height:42px;min-width:42px;border-radius:99px;border:0;background:var(--sunk);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;color:var(--ink)}
+.readbar .rb.close{background:var(--accent);color:var(--accent-ink)}
+
+/* phones: app layout with a bottom tab bar */
+@media (max-width:760px){
+  body{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  body.has-player{padding-bottom:calc(250px + env(safe-area-inset-bottom,0px))}
+  .tabs{display:none}
+  .appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin:0 -16px;padding:6px 16px}
+  body:not([data-tab="today"]):not([data-tab="stats"]) .hero{display:none}
+  body[data-tab="today"] .hero .kpis,body[data-tab="today"] .hero .eyebrow{display:none}
+  body[data-tab="today"] .hero{padding:16px 18px}
+  .bnav{display:flex;position:fixed;z-index:30;inset:auto 0 0 0;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);
+    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));box-shadow:0 -4px 20px rgb(0 0 0 / .08)}
+  .bn{flex:1;display:grid;justify-items:center;gap:2px;border:0;background:none;padding:6px 2px 4px;border-radius:14px;color:var(--muted);font-size:.72rem;font-weight:500;-webkit-tap-highlight-color:transparent;position:relative}
+  .bn .ic{width:23px;height:23px}
+  .bn.on{color:var(--accent)}
+  .bn.on::before{content:"";position:absolute;top:-6px;width:28px;height:3px;border-radius:0 0 4px 4px;background:var(--gold)}
+  .bn.on .ic{stroke-width:2.4}
+  .player{bottom:calc(62px + env(safe-area-inset-bottom,0px));padding-bottom:10px;border-radius:18px 18px 0 0}
+  .player .opts2{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+  .player .opts2::-webkit-scrollbar{display:none}
+  body.has-player .fab{bottom:calc(270px + env(safe-area-inset-bottom,0px))}
+  .fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  body.reading .player{bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .alertbox{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:420px){.qa{gap:7px}.qb{font-size:.76rem;padding:12px 2px 10px}.qi{width:42px;height:42px}}
+@media (prefers-reduced-motion:reduce){.sh-in,.sh-bg,.fab,#toast{transition:none}}
+body.has-player .alertbox{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+@media (max-width:760px){body.has-player .alertbox{bottom:calc(262px + env(safe-area-inset-bottom,0px))}.al-in{max-height:55vh}}
 </style>
 
 <div class="wrap">
@@ -1070,13 +1160,13 @@ function plMark(){
   document.querySelectorAll(".v.playing").forEach(e=>e.classList.remove("playing"));
   const a = PL.q[PL.i]; if (!a) return;
   const el = document.querySelector(`.v[data-v="${a}"]`);
-  if (el){ el.classList.add("playing"); const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight-190) el.scrollIntoView({behavior:"smooth",block:"center"}); }
+  if (el){ el.classList.add("playing"); const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight-(innerWidth<=760?260:190)) el.scrollIntoView({behavior:"smooth",block:"center"}); }
 }
 function plUI(){
   const box = $("#player"); const a = PL.q[PL.i];
   box.hidden = !PL.q.length; document.body.classList.toggle("has-player", !!PL.q.length);
   if (!PL.q.length) return;
-  $("#plNow").textContent = `الآية ${a}` + (PL.q.length>1 ? ` · ${PL.i+1} من ${PL.q.length}` : "");
+  $("#plNow").textContent = `الآية ${AR(a)}` + (PL.q.length>1 ? ` · ${AR(PL.i+1)} من ${AR(PL.q.length)}` : "");
   const rep = S.prefs.rep, done = rep - PL.left + 1;
   $("#plSub").innerHTML = PL.waiting ? `<span class="turn">دورك: ردّد الآية الآن…</span>` : `${PL.label} · الحصري (مجوّد)${rep>1?` · التكرار ${done}/${rep}`:""}`;
   $("#plPlay").innerHTML = (PL.el.paused && !PL.waiting) ? ic("play") : ic("pause");
@@ -1472,6 +1562,7 @@ function render(){
   else if (tab==="prayer") renderPrayer();
   else if (tab==="adhkar") renderAdhkar();
   else renderMethod();
+  appAfterRender();
   window.pwaPanel && window.pwaPanel();
 }
 { const h = (location.hash||"").slice(1); if (["today","prayer","adhkar","plan","stats","sermons","rules","method"].includes(h)) tab = h; }
@@ -2141,6 +2232,167 @@ async function toggleWake(btn){
 }
 function setWakeBtn(b){ b.classList.toggle("on", !!wakeLock); b.innerHTML = wakeLock ? `${ic("check")}الشاشة ستبقى مضاءة (اضغط للإلغاء)` : `${ic("sun")}أبقِ الشاشة مضاءة للأذان`; }
 document.addEventListener("visibilitychange", async ()=>{ if (document.visibilityState==="visible" && wakeLock===null && window.__wantWake){ try { wakeLock = await navigator.wakeLock.request("screen"); } catch(e){} } });
+/* ----- app shell: bottom bar, compact header, settings sheet, quick actions, reading mode, lock-screen controls ----- */
+Object.assign(ICONS, {
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  up:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  share:'<path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+  aplus:'<path d="M3 19l5-14 5 14M5 14h6M17 8v8M13 12h8"/>',
+  aminus:'<path d="M3 19l5-14 5 14M5 14h6M14 12h7"/>'
+});
+const NAV_MAIN = [["today","اليوم","book"],["prayer","الصلاة","mosque"],["adhkar","الأذكار","beads"],["stats","تقدّمي","chart"]];
+const NAV_MORE = [["plan","خطة الثلاثين يوماً","cal"],["sermons","دروس ومواعظ","heart"],["rules","دليل أحكام التجويد","palette"],["method","طريقة الحفظ","compass"]];
+const TAB_TITLE = {today:"ورد اليوم",prayer:"مواقيت الصلاة",adhkar:"الأذكار والسبحة",plan:"خطة الثلاثين يوماً",stats:"إحصائياتي",sermons:"دروس ومواعظ",rules:"أحكام التجويد",method:"طريقة الحفظ"};
+
+function applyTheme(){
+  const t = S.prefs.theme || "auto";
+  if (t==="auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t;
+  const dark = t==="dark" || (t==="auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? "#0a2a21" : "#0b4d3b";
+}
+function toast(msg){
+  let t = $("#toast"); if (!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(()=>t.classList.remove("on"), 2200);
+}
+function buzz(ms){ try { navigator.vibrate && navigator.vibrate(ms||10); } catch(e){} }
+
+/* shell elements, created once */
+(function buildShell(){
+  const bar = document.createElement("header"); bar.id = "appbar"; bar.className = "appbar";
+  $("#hero").before(bar);
+  const nav = document.createElement("nav"); nav.id = "bnav"; nav.className = "bnav"; nav.setAttribute("aria-label","التنقل");
+  document.body.appendChild(nav);
+  const sheet = document.createElement("div"); sheet.id = "sheet"; sheet.className = "sheet"; sheet.hidden = true;
+  sheet.innerHTML = `<div class="sh-bg" data-close></div><div class="sh-in" role="dialog" aria-modal="true" aria-labelledby="shTitle"><div class="sh-grip"></div><div id="shBody"></div></div>`;
+  document.body.appendChild(sheet);
+  sheet.addEventListener("click", e=>{ if (e.target.closest("[data-close]")) closeSheet(); });
+  const fab = document.createElement("button"); fab.id = "topFab"; fab.className = "fab"; fab.setAttribute("aria-label","إلى الأعلى"); fab.innerHTML = ic("up");
+  fab.onclick = ()=>window.scrollTo({top:0, behavior:"smooth"}); document.body.appendChild(fab);
+  addEventListener("scroll", ()=>fab.classList.toggle("on", scrollY > 900), {passive:true});
+  const rx = document.createElement("div"); rx.id = "readBar"; rx.className = "readbar";
+  rx.innerHTML = `<button class="rb" id="rdMinus" aria-label="تصغير الخط">${ic("aminus")}</button><button class="rb" id="rdPlus" aria-label="تكبير الخط">${ic("aplus")}</button><button class="rb" id="rdPlay" aria-label="استمع للورد">${ic("headphones")}</button><button class="rb close" id="rdClose">${ic("x")}خروج</button>`;
+  document.body.appendChild(rx);
+  $("#rdMinus").onclick = ()=>setSize(-0.1); $("#rdPlus").onclick = ()=>setSize(0.1);
+  $("#rdPlay").onclick = ()=>{ const p = PLAN[viewDay-1]; play(p.verses, `ورد اليوم ${p.day}`); };
+  $("#rdClose").onclick = ()=>setReading(false);
+  document.addEventListener("keydown", e=>{ if (e.key==="Escape"){ if (!$("#sheet").hidden) closeSheet(); else if (document.body.classList.contains("reading")) setReading(false); } });
+  applyTheme();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", applyTheme);
+})();
+
+function setSize(d){
+  S.prefs.size = Math.round(Math.min(3.2, Math.max(1.1, S.prefs.size + d))*10)/10;
+  const q = $("#qtext"); if (q) q.style.setProperty("--qsize", S.prefs.size+"rem");
+  const r = $("#sizeR"); if (r) r.value = S.prefs.size;
+  save(); buzz(8);
+}
+function setReading(on){
+  document.body.classList.toggle("reading", on);
+  document.querySelectorAll(".rd-panel").forEach(x=>x.classList.remove("rd-panel"));
+  const mp = $(".mushaf") && $(".mushaf").closest(".panel"); if (on && mp) mp.classList.add("rd-panel");
+  if (on){ const m = $(".mushaf"); if (m) m.scrollIntoView({block:"start"}); window.scrollBy(0,-12); }
+  else { const m = $(".mushaf"); if (m) m.scrollIntoView({block:"center"}); }
+}
+
+function renderAppbar(){
+  $("#appbar").innerHTML = `<div class="ab-t"><span class="ab-star"></span><b>${TAB_TITLE[tab]||"رفيق حفظ البقرة"}</b></div>
+    <div class="ab-act"><button class="abtn" id="abTheme" aria-label="الوضع الليلي">${ic(document.documentElement.dataset.theme==="dark"||(!document.documentElement.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches)?"sun":"moon")}</button>
+    <button class="abtn" id="abSet" aria-label="الإعدادات">${ic("gear")}</button></div>`;
+  $("#abSet").onclick = openSettings;
+  $("#abTheme").onclick = ()=>{ const dark = document.documentElement.dataset.theme==="dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); S.prefs.theme = dark ? "light" : "dark"; applyTheme(); save(); renderAppbar(); };
+}
+function renderBnav(){
+  const more = NAV_MORE.some(([k])=>k===tab);
+  $("#bnav").innerHTML = NAV_MAIN.map(([k,n,i])=>`<button class="bn ${tab===k?"on":""}" data-bn="${k}" ${tab===k?'aria-current="page"':""}>${ic(i)}<span>${n}</span></button>`).join("")
+    + `<button class="bn ${more?"on":""}" id="bnMore">${ic("grid")}<span>المزيد</span></button>`;
+  document.querySelectorAll("[data-bn]").forEach(b=>b.onclick=()=>{ buzz(); if (tab===b.dataset.bn) window.scrollTo({top:0,behavior:"smooth"}); else setTab(b.dataset.bn); });
+  $("#bnMore").onclick = ()=>{ buzz(); openMore(); };
+}
+
+function openSheet(html){ $("#shBody").innerHTML = html; $("#sheet").hidden = false; document.body.classList.add("sheet-open"); requestAnimationFrame(()=>$("#sheet").classList.add("on")); }
+function closeSheet(){ const s = $("#sheet"); s.classList.remove("on"); document.body.classList.remove("sheet-open"); setTimeout(()=>{ s.hidden = true; }, 220); }
+function openMore(){
+  openSheet(`<h2 id="shTitle">المزيد</h2>
+    <div class="tiles">${NAV_MORE.map(([k,n,i])=>`<button class="tile ${tab===k?"on":""}" data-go="${k}"><span class="ti">${ic(i)}</span>${n}</button>`).join("")}
+    <button class="tile" data-go="tasbih"><span class="ti">${ic("beads")}</span>السبحة</button>
+    <button class="tile" id="shSet"><span class="ti">${ic("gear")}</span>الإعدادات</button></div>`);
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeSheet(); if (b.dataset.go==="tasbih"){ adkTab = "t"; setTab("adhkar"); } else setTab(b.dataset.go); });
+  $("#shSet").onclick = openSettings;
+}
+function openSettings(){
+  const th = S.prefs.theme || "auto";
+  const url = location.href.split("#")[0];
+  openSheet(`<h2 id="shTitle">الإعدادات</h2>
+    <div class="set">
+      <div class="set-r"><span>المظهر</span><div class="seg">${[["auto","تلقائي"],["light","نهاري"],["dark","ليلي"]].map(([k,n])=>`<button class="${th===k?"on":""}" data-th="${k}">${n}</button>`).join("")}</div></div>
+      <div class="set-r"><span>حجم خط المصحف</span><div class="stepper"><button class="btn icon" data-sz="-0.1" aria-label="تصغير">${ic("aminus")}</button><b class="num" id="szV">${Math.round(S.prefs.size/1.75*100)}٪</b><button class="btn icon" data-sz="0.1" aria-label="تكبير">${ic("aplus")}</button></div></div>
+      <div class="set-r"><span>تكرار كل آية في المشغّل</span><div class="seg">${[1,3,5,10].map(n=>`<button class="${S.prefs.rep===n?"on":""}" data-rp="${n}">${n===1?"مرة":AR(n)}</button>`).join("")}</div></div>
+      <div class="set-r"><span>سرعة التلاوة</span><div class="seg">${[[0.75,"بطيئة"],[1,"عادية"],[1.25,"أسرع"]].map(([n,l])=>`<button class="${S.prefs.rate===n?"on":""}" data-rt="${n}">${l}</button>`).join("")}</div></div>
+      <div class="set-r"><span>هدف تكرار الآية للحفظ</span><div class="seg">${[10,20,30,40].map(n=>`<button class="${S.prefs.target===n?"on":""}" data-tg="${n}">${AR(n)}</button>`).join("")}</div></div>
+      <div class="set-r"><span>إبقاء الشاشة مضاءة</span><button class="btn" id="setWake">${typeof wakeLock!=="undefined"&&wakeLock?"مفعّل":"فعّل"}</button></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      ${navigator.share?`<button class="btn" id="setShare">${ic("share")}شارك البرنامج</button>`:`<button class="btn" id="setCopy">${ic("share")}انسخ رابط البرنامج</button>`}
+      <button class="btn ghost" data-close>إغلاق</button>
+    </div>
+    <p class="small muted">تُحفظ الإعدادات مع تقدّمك في هذا الجهاز.</p>`);
+  document.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ S.prefs.theme = b.dataset.th; applyTheme(); save(); renderAppbar(); openSettings(); });
+  document.querySelectorAll("[data-sz]").forEach(b=>b.onclick=()=>{ setSize(+b.dataset.sz); $("#szV").textContent = Math.round(S.prefs.size/1.75*100)+"٪"; });
+  document.querySelectorAll("[data-rp]").forEach(b=>b.onclick=()=>{ S.prefs.rep = +b.dataset.rp; save(); if (PL.q.length) plUI(); openSettings(); });
+  document.querySelectorAll("[data-rt]").forEach(b=>b.onclick=()=>{ S.prefs.rate = +b.dataset.rt; PL.el.playbackRate = S.prefs.rate; save(); if (PL.q.length) plUI(); openSettings(); });
+  document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{ S.prefs.target = +b.dataset.tg; save(); openSettings(); if (tab==="today") renderTools(); });
+  $("#setWake").onclick = async ()=>{ window.__wantWake = !wakeLock; await toggleWake($("#setWake")); $("#setWake").textContent = wakeLock ? "مفعّل" : "فعّل"; $("#setWake").className = "btn"+(wakeLock?" on":""); };
+  const sh = $("#setShare"); if (sh) sh.onclick = ()=>navigator.share({title:"رفيق حفظ البقرة", text:"برنامج لحفظ سورة البقرة في ٣٠ يوماً بتلاوة الحصري وأحكام التجويد", url}).catch(()=>{});
+  const cp = $("#setCopy"); if (cp) cp.onclick = async ()=>{ try { await navigator.clipboard.writeText(url); toast("نُسخ الرابط"); } catch(e){ toast(url); } };
+}
+
+/* quick actions on the day view */
+function adhkarNow(){ const h = new Date().getHours(); return h>=4 && h<15 ? "m" : "e"; }
+function enhanceToday(){
+  const p = PLAN[viewDay-1]; if (!p) return;
+  const k = adhkarNow(), adDone = typeof adhkarDone==="function" && adhkarDone(k);
+  const qa = `<div class="qa" role="group" aria-label="أزرار سريعة">
+    <button class="qb" id="qaPlay"><span class="qi">${ic("headphones")}</span>استمع للورد</button>
+    <button class="qb" id="qaTest"><span class="qi">${ic("mic")}</span>سمّع حفظك</button>
+    <button class="qb" id="qaRead"><span class="qi">${ic("expand")}</span>وضع القراءة</button>
+    <button class="qb ${adDone?"ok":""}" id="qaAdk"><span class="qi">${ic(k==="m"?"sun":"sunset")}</span>${k==="m"?"أذكار الصباح":"أذكار المساء"}</button>
+  </div>`;
+  const first = [...document.querySelectorAll("#view .wrap > section.panel")].find(x=>!x.querySelector("#startBtn"));
+  if (first) first.insertAdjacentHTML("beforebegin", qa);
+  $("#qaPlay").onclick = ()=>{ buzz(); play(p.verses, `ورد اليوم ${p.day}`); };
+  $("#qaTest").onclick = ()=>{ buzz(); mode = "test"; revealed = new Set(); hintCount = 0; buildTestOrder(p); render(); const m = $(".mushaf"); if (m) m.scrollIntoView({block:"center"}); };
+  $("#qaRead").onclick = ()=>{ buzz(); setReading(true); };
+  $("#qaAdk").onclick = ()=>{ buzz(); adkTab = k; setTab("adhkar"); };
+  // font size buttons beside the slider, and a reading-mode button on the mushaf header
+  const sz = $("#sizeR");
+  if (sz){ const box = sz.parentElement; box.classList.add("szbox");
+    box.innerHTML = `<button class="btn icon" id="szMinus" aria-label="تصغير الخط">${ic("aminus")}</button><button class="btn icon" id="szPlus" aria-label="تكبير الخط">${ic("aplus")}</button><button class="btn" id="szRead">${ic("expand")}ملء الشاشة</button>`;
+    $("#szMinus").onclick = ()=>setSize(-0.1); $("#szPlus").onclick = ()=>setSize(0.1); $("#szRead").onclick = ()=>setReading(true); }
+}
+
+function appAfterRender(){
+  document.body.dataset.tab = tab;
+  if (tab!=="today" && document.body.classList.contains("reading")) document.body.classList.remove("reading");
+  renderAppbar(); renderBnav();
+  if (tab==="today") enhanceToday();
+}
+
+/* lock-screen and headphone controls */
+if ("mediaSession" in navigator){
+  const ms = navigator.mediaSession;
+  const meta = ()=>{ const a = PL.q[PL.i]; if (!a) return;
+    try { ms.metadata = new MediaMetadata({title:`سورة البقرة · الآية ${AR(a)}`, artist:"محمود خليل الحصري (مجوّد)", album: PL.label || "رفيق حفظ البقرة",
+      artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"},{src:"icon-192.png",sizes:"192x192",type:"image/png"}]}); } catch(e){} };
+  PL.el.addEventListener("play", ()=>{ meta(); ms.playbackState = "playing"; });
+  PL.el.addEventListener("pause", ()=>{ ms.playbackState = "paused"; });
+  const h = (n,f)=>{ try { ms.setActionHandler(n,f); } catch(e){} };
+  h("play", ()=>$("#plPlay").click()); h("pause", ()=>PL.el.pause());
+  h("nexttrack", ()=>$("#plNext").click()); h("previoustrack", ()=>$("#plPrev").click());
+  h("seekbackward", null); h("seekforward", null);
+}
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

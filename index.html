@@ -822,6 +822,19 @@ body.reading.has-player .readbar{bottom:calc(190px + env(safe-area-inset-bottom,
 @media (prefers-reduced-motion:reduce){.sh-in,.sh-bg,.fab,#toast{transition:none}}
 body.has-player .alertbox{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
 @media (max-width:760px){body.has-player .alertbox{bottom:calc(262px + env(safe-area-inset-bottom,0px))}.al-in{max-height:55vh}}
+
+/* daily self-account */
+.mhg{display:grid;gap:8px}
+.mhd{border:1px solid var(--line);border-radius:14px;background:var(--raised);padding:0 12px}
+.mhd[open]{padding-bottom:10px}
+.mhd summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 0;cursor:pointer;color:var(--ink);font-size:.95rem}
+.mhd summary::-webkit-details-marker{display:none}
+.mhd summary::after{content:"";width:8px;height:8px;border-inline-start:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);margin-inline-start:6px;transition:transform .2s}
+.mhd[open] summary::after{transform:rotate(135deg)}
+.mh-t{display:flex;align-items:center;gap:8px;flex:1;font-weight:500}
+.mh-t .ic{color:var(--gold)}
+.mhnote{display:grid;gap:6px}
+.mhnote textarea{width:100%;font:inherit;font-size:.9rem;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--raised);color:var(--ink);resize:vertical}
 </style>
 
 <div class="wrap">
@@ -923,7 +936,8 @@ const DAILY = [
  ["asbab",6,0],["khalawat",2,0],["fadl",5,0],["khalawat",6,0],["asbab",8,0],["khalawat",4,2],
  ["baqara",3,0],["khalawat",6,2],["asbab",8,1],["khalawat",7,0],["baqara",2,0],["baqara",2,2]
 ];
-const MUHASABA = ["صليت الصلوات في وقتها","حفظت خلوتي من المعاصي اليوم","غضضت بصري","دعوت الله أن يثبّت حفظي","ذكرت الله صباحاً ومساءً"];
+const MUHASABA = ["صليت الصلوات في وقتها", "حفظت خلوتي من المعاصي اليوم", "غضضت بصري", "دعوت الله أن يثبّت حفظي", "ذكرت الله صباحاً ومساءً", "صليت الفرائض جماعة (في المسجد للرجال)", "حافظت على السنن الرواتب", "صليت الضحى", "صليت الوتر أو شيئاً من قيام الليل", "خشعت في صلاتي وتدبّرت ما أقرأ", "حفظت ورد اليوم الجديد", "راجعت ما حفظته من قبل", "صليت بما حفظت", "تدبّرت معنى آية واحدة على الأقل", "قلت أذكار ما بعد الصلاة", "استغفرت الله كثيراً", "صليت على النبي ﷺ", "قلت أذكار النوم", "حفظت لساني من الغيبة والنميمة", "صدقت في كلامي ولم أكذب", "تركت اللغو وما لا يعنيني", "لم أضيّع وقتي في الهاتف بلا فائدة", "تحرّيت الحلال في كسبي وطعامي", "أخلصت عملي لله ولم أطلب مدح الناس", "سلم قلبي من الحسد والحقد على أحد", "تبت إلى الله من ذنب أعرفه في نفسي", "بررت والديّ أو دعوت لهما", "وصلت رحمي ولو برسالة", "أحسنت إلى أهلي وجيراني", "تصدّقت ولو بشيء قليل", "كظمت غيظي وعفوت عمّن أساء"];
+const MH_GROUPS = [["الصلاة", "mosque", [0, 5, 6, 7, 8, 9]], ["القرآن والحفظ", "book", [10, 11, 12, 13, 3]], ["الذكر", "beads", [4, 14, 15, 16, 17]], ["اللسان والجوارح", "shield", [2, 18, 19, 20, 21, 22]], ["القلب والخلوة", "heart", [1, 23, 24, 25]], ["الناس", "flame", [26, 27, 28, 29, 30]]];
 const ICONS = {
  play:'<path class="f" d="M7 4.5v15l13-7.5z"/>', pause:'<path class="f" d="M6 4h4v16H6zM14 4h4v16h-4z"/>',
  next:'<path d="M15 6l-6 6 6 6"/>', prev:'<path d="M9 6l6 6-6 6"/>', check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
@@ -1421,7 +1435,7 @@ function bindToday(p){
   $("#nextDay").onclick = ()=>{ viewDay++; resetModes(); render(); };
   $("#playDay").onclick = ()=>play(p.verses, `ورد اليوم ${p.day}`);
   document.querySelectorAll("[data-playrev]").forEach(b=>b.onclick = ()=>{ const q = NEWS[+b.dataset.playrev]; play(q.verses, `ورد اليوم ${q.day}`); });
-  document.querySelectorAll("[data-mh]").forEach(cb=>cb.onchange=()=>{ const d = S.mh[p.day] = S.mh[p.day]||{}; d[cb.dataset.mh] = cb.checked; save(); const n = Object.values(d).filter(Boolean).length; $("#mhCount").textContent = `${n}/${MUHASABA.length}`; });
+  bindMuhasaba(p.day);
   $("#doneBtn").onclick = ()=>{ if (S.done[p.day]) delete S.done[p.day]; else S.done[p.day]=todayStr(); save(); render(); };
   document.querySelectorAll("[data-step]").forEach(cb=>cb.onchange = ()=>{ const d = S.steps[p.day] = S.steps[p.day]||{}; d[cb.dataset.step]=cb.checked; cb.nextElementSibling.className = cb.checked?"done":""; save(); });
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick = ()=>{ mode = b.dataset.mode; revealed = new Set(); hintCount = 0; buildTestOrder(p); render(); });
@@ -1598,10 +1612,22 @@ function dailyReminder(day){
     <div><button class="btn ghost small" data-sermon="${sid}">${ic("heart")}اقرأ المزيد في «دروس ومواعظ»</button></div></section>`;
 }
 function muhasabaHTML(day){
-  const d = S.mh[day]||{}, n = Object.values(d).filter(Boolean).length;
+  const d = S.mh[day]||{}, n = Object.values(d).filter(Boolean).length, note = (S.mhNote||{})[day]||"";
+  const cnt = ix => ix.filter(i=>d[i]).length;
   return `<section class="panel"><div class="spread"><div class="ph"><span class="badge gold">${ic("shield")}</span><h2>محاسبة اليوم</h2></div><span class="chip num" id="mhCount">${n}/${MUHASABA.length}</span></div>
-    <p class="small muted">أسئلة تسألها نفسك قبل النوم. إجاباتك لا يراها أحد غيرك.</p>
-    <ul class="steps muhasaba">${MUHASABA.map((m,i)=>`<li><label><input type="checkbox" id="mh-${day}-${i}" data-mh="${i}" ${d[i]?"checked":""}><span>${m}</span></label></li>`).join("")}</ul></section>`;
+    <p class="small muted">أسئلة تسألها نفسك قبل النوم. إجاباتك لا يراها أحد غيرك. ما فاتك اليوم فاستغفر الله منه واعزم على تداركه غداً.</p>
+    <div class="bar"><i id="mhBar" style="width:${n/MUHASABA.length*100}%"></i></div>
+    <div class="mhg">${MH_GROUPS.map(([t,icn,ix],g)=>`<details class="mhd" ${g===0?"open":""}><summary><span class="mh-t">${ic(icn)}${t}</span><span class="chip num" data-mhg="${g}">${cnt(ix)}/${ix.length}</span></summary>
+      <ul class="steps muhasaba">${ix.map(i=>`<li><label><input type="checkbox" id="mh-${day}-${i}" data-mh="${i}" ${d[i]?"checked":""}><span>${MUHASABA[i]}</span></label></li>`).join("")}</ul></details>`).join("")}</div>
+    <label class="mhnote"><span class="small"><b>ما الذي أصلحه غداً؟</b> (اختياري، يبقى في جهازك)</span>
+      <textarea id="mhNote" rows="2" placeholder="مثلاً: أصلي الفجر في المسجد، أقلل الهاتف بعد العشاء…">${esc(note)}</textarea></label>
+  </section>`;
+}
+function bindMuhasaba(day){
+  document.querySelectorAll("[data-mh]").forEach(cb=>cb.onchange=()=>{ const d = S.mh[day] = S.mh[day]||{}; d[cb.dataset.mh] = cb.checked; save();
+    const n = Object.values(d).filter(Boolean).length; $("#mhCount").textContent = `${n}/${MUHASABA.length}`; $("#mhBar").style.width = (n/MUHASABA.length*100)+"%";
+    MH_GROUPS.forEach(([,,ix],g)=>{ const el = document.querySelector(`[data-mhg="${g}"]`); if (el) el.textContent = `${ix.filter(i=>d[i]).length}/${ix.length}`; }); });
+  const t = $("#mhNote"); if (t) t.oninput = ()=>{ S.mhNote = S.mhNote||{}; S.mhNote[day] = t.value; clearTimeout(t._h); t._h = setTimeout(save, 600); };
 }
 document.addEventListener("click", e=>{ const b = e.target.closest("[data-sermon]"); if (b){ sermonFocus = b.dataset.sermon; setTab("sermons"); } });
 
@@ -1704,7 +1730,7 @@ function renderStatsView(){
   const quizVals = Object.values(S.quiz).map(s=>{ const [a,b] = String(s).split("/").map(Number); return b ? a/b : null; }).filter(x=>x!==null);
   const quizAvg = quizVals.length ? Math.round(quizVals.reduce((s,x)=>s+x,0)/quizVals.length*100) : null;
   const tests = Object.entries(S.tests);
-  const mhDays = Object.values(S.mh).filter(d=>Object.values(d).filter(Boolean).length===MUHASABA.length).length;
+  const mhDays = Object.values(S.mh).filter(d=>Object.values(d).filter(Boolean).length>=Math.ceil(MUHASABA.length*0.8)).length;
   const counts = [0,0,0,0,0]; for (let a=1;a<=286;a++) counts[verseState(a)]++;
   const topRep = Object.entries(S.rep).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const kt = (icon,k,v,s)=>`<div class="kt"><span class="k">${ic(icon)}${k}</span><span class="v2">${v}</span><span class="s">${s}</span></div>`;
@@ -1719,7 +1745,7 @@ function renderStatsView(){
       ${kt("repeat","التكرار", T.reps, "مرة قرأت فيها آية بالعدّاد")}
       ${kt("palette","اختبار الأحكام", quizAvg===null?"—":quizAvg+"٪", quizVals.length?`متوسط ${quizVals.length} اختبار`:"يظهر في أيام المراجعة")}
       ${kt("mic","جلسات التسميع", tests.length, tests.length?`متوسط التلقين ${Math.round(tests.reduce((s,[,t])=>s+t.hints,0)/tests.length)} كلمة`:"أكمل تسميع ورد كامل")}
-      ${kt("shield","محاسبة كاملة", mhDays, "يوم أجبت فيه عن كل الأسئلة")}
+      ${kt("shield","محاسبة كاملة", mhDays, "يوم حققت فيه ٨٠٪ من المحاسبة أو أكثر")}
     </div></section>
   <section class="panel"><h2>الآيات المحفوظة مقابل الخطة</h2>${lineChart()}</section>
   <section class="panel"><h2>دقائق الاستماع، آخر ١٤ يوماً</h2>${barChart()}</section>

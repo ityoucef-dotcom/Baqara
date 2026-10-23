@@ -664,6 +664,13 @@ details summary{cursor:pointer;color:var(--accent);font-size:.9rem}
 .adkmap i{aspect-ratio:1;border-radius:4px;background:var(--sunk);border:1px solid var(--line)}
 .adkmap i.s1{background:var(--gold-soft);border-color:var(--gold)}
 .adkmap i.s2{background:var(--accent);border-color:var(--accent)}
+.adhpick{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:14px}
+.adhpick>b{font-size:.95em}
+.adhopt{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 10px;border-radius:12px;background:var(--raised);border:1px solid transparent}
+.adhopt.on{border-color:var(--accent)}
+.adhopt.on{background:var(--accent-soft)}
+.adhopt .ck{flex:1;margin:0;background:none;padding:4px 0;border:0}
+.adhopt small{display:block;font-size:.8em}
 /* Islamic layer: girih (8-point star) lattice, gold illumination, mihrab frames, Ruqaa display type */
 :root{
   --f-cal:"Aref Ruqaa","Amiri",serif; --f-nas:"Amiri","Noto Naskh Arabic",serif;
@@ -1947,8 +1954,9 @@ function findCity(name){ for (const [g,list,m] of CITIES) for (const c of list) 
 
 const PNAMES = {fajr:"الفجر",sunrise:"الشروق",dhuhr:"الظهر",asr:"العصر",maghrib:"المغرب",isha:"العشاء"};
 const PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
-const PDEF = {city:null, method:"algeria", asr:1, adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, pre:15, adhan:true, adhanFajr:true, remAdhkar:true, vol:0.9};
-function PP(){ S.pr = Object.assign({}, PDEF, S.pr||{}); S.pr.adj = Object.assign({}, PDEF.adj, S.pr.adj||{}); return S.pr; }
+const PDEF = {city:null, method:"algeria", asr:1, adj:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}, pre:15, adhan:true, adhanFajr:true, adhanId:"nabawi_hq", adhanFajrId:"same", remAdhkar:true, vol:0.9};
+// fill defaults in place so handlers holding an earlier PP() keep writing to the saved object
+function PP(){ const p = S.pr || (S.pr = {}); for (const k in PDEF) if (!(k in p)) p[k] = k==="adj" ? {} : PDEF[k]; for (const k in PDEF.adj) if (!(k in p.adj)) p.adj[k] = PDEF.adj[k]; return p; }
 let guessed = null;
 function cityNow(){
   const p = PP(); if (p.city) return p.city;
@@ -1976,17 +1984,32 @@ function hijri(d){ try { return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umal
 function greg(d){ try { return new Intl.DateTimeFormat("ar",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(d); } catch(e){ return d.toDateString(); } }
 
 /* ----- adhan audio and in-page alerts ----- */
+// recordings published under adhan/; labels follow what each source states
+const ADHANS = [
+  {id:"nabawi_hq", f:"adhan/nabawi_hq.mp3", n:"أذان المسجد النبوي (تسجيل عالي النقاء)", q:"٢١١ ك.ب/ث · ٣:٥١ د"},
+  {id:"surayhi1", f:"adhan/surayhi_1.mp3", n:"الشيخ عبد المجيد السريحي (التسجيل الأول)", q:"١٢٨ ك.ب/ث · ٣:٢٨ د"},
+  {id:"surayhi2", f:"adhan/surayhi_2.mp3", n:"الشيخ عبد المجيد السريحي (التسجيل الثاني)", q:"١٧٦ ك.ب/ث · ٤:١٦ د"},
+  {id:"madinah", f:"adhan/madinah.mp3", n:"أذان المسجد النبوي (الأذان الأول في البرنامج)", q:"٦٤ ك.ب/ث · ٣:٣٥ د"}
+];
+const FAJR_ADHAN = {id:"nabawi_fajr", f:"adhan/nabawi_fajr.mp3", n:"أذان الفجر من المدينة المنورة", q:"١٦٤ ك.ب/ث · ٥:٠٨ د"};
+function adhanFile(fajr){
+  const p = PP();
+  if (fajr && p.adhanFajrId === FAJR_ADHAN.id) return FAJR_ADHAN.f;
+  return (ADHANS.find(a=>a.id===p.adhanId) || ADHANS[0]).f;
+}
+// fetch the chosen files once so the service worker keeps them for offline use
+function warmAdhan(){ if (window.OFFLINE && navigator.onLine) [adhanFile(false), adhanFile(true)].forEach(f=>{ try { fetch(f).then(r=>r.arrayBuffer()).catch(()=>{}); } catch(e){} }); }
 const ADH = new Audio(); ADH.preload = "none"; let adhanUnlocked = false, userActed = false;
-function adhanSrc(){ if (!ADH.src) ADH.src = "adhan/madinah.mp3"; }
-document.addEventListener("pointerdown", ()=>{ if (userActed) return; userActed = true;
+function adhanSrc(fajr){ const f = adhanFile(fajr); if (!ADH.src || !ADH.src.endsWith(f)) ADH.src = f; }
+document.addEventListener("pointerdown", ()=>{ if (userActed) return; userActed = true; warmAdhan();
   // prime the adhan element during a real gesture so it may play later on its own
   try { adhanSrc(); ADH.muted = true; const p = ADH.play(); if (p && p.then) p.then(()=>{ ADH.pause(); ADH.currentTime = 0; ADH.muted = false; adhanUnlocked = true; }).catch(()=>{ ADH.muted = false; }); } catch(e){}
 }, {capture:true});
-function playAdhan(){ adhanSrc(); ADH.volume = PP().vol; ADH.currentTime = 0; ADH.muted = false; const p = ADH.play(); if (p && p.catch) p.catch(()=>{}); }
+function playAdhan(fajr){ adhanSrc(fajr); ADH.volume = PP().vol; ADH.currentTime = 0; ADH.muted = false; const p = ADH.play(); if (p && p.catch) p.catch(()=>{}); }
 function stopAdhan(){ ADH.pause(); ADH.currentTime = 0; }
 ADH.addEventListener("play", ()=>{ const b = $("#adhStop"); if (b) b.hidden = false; renderPrayerBtn(); });
 ADH.addEventListener("pause", ()=>{ const b = $("#adhStop"); if (b) b.hidden = true; renderPrayerBtn(); });
-function renderPrayerBtn(){ const b = $("#adhPrev"); if (b) b.innerHTML = ADH.paused ? `${ic("volume")}استمع لأذان المسجد النبوي` : `${ic("pause")}إيقاف الأذان`; }
+function renderPrayerBtn(){ const b = $("#adhPrev"); if (b) b.innerHTML = ADH.paused ? `${ic("volume")}استمع للأذان المختار` : `${ic("pause")}إيقاف الأذان`; }
 
 const alertBox = document.createElement("div"); alertBox.className = "alertbox"; alertBox.setAttribute("role","status"); alertBox.hidden = true; document.body.appendChild(alertBox);
 const alertQ = [];
@@ -2025,7 +2048,7 @@ function tick(){
     if (diff<=0 && diff > -180000 && !wasFired("adhan_"+k)){
       markFired("adhan_"+k);
       const sound = p.adhan && (k!=="fajr" || p.adhanFajr);
-      if (sound) playAdhan();
+      if (sound) playAdhan(k==="fajr");
       showAlert({kind:"adhan", title:`حان الآن وقت صلاة ${PNAMES[k]}`, sub:`${cityNow().name} · ${hm(at)}`, body:remHTML(PRAYER_REM[(remIdx++)%PRAYER_REM.length]), actions:[{t:"إيقاف الأذان",ic:"x",fn:stopAdhan}]});
     }
   }
@@ -2068,14 +2091,16 @@ function renderPrayer(){
     </section>
     <section class="panel"><div class="spread"><div class="ph"><span class="badge">${ic("clock")}</span><h2>مواقيت اليوم</h2></div><span class="small muted">${METHODS[methodNow()].n.split(" (")[0]}</span></div>
       <div class="ptimes">${rows}</div>
-      <div class="row"><button class="btn primary" id="adhPrev">${ic("volume")}استمع لأذان المسجد النبوي</button>
+      <div class="row"><button class="btn primary" id="adhPrev">${ic("volume")}استمع للأذان المختار</button>
       ${"Notification" in window ? `<button class="btn" id="notifBtn">${ic("bell")}إشعارات المتصفح</button>` : ""}</div>
       <p class="small muted" id="notifInfo"></p>
     </section>
     <section class="panel"><div class="ph"><span class="badge gold">${ic("bell")}</span><h2>التنبيهات والأذان</h2></div>
       <div class="formgrid">
         <label>التذكير قبل الصلاة <select id="prPre">${preOpts}</select></label>
-        <label class="ck"><input type="checkbox" id="prAdhan" ${p.adhan?"checked":""}> تشغيل أذان المسجد النبوي عند دخول الوقت</label>
+        <label class="ck"><input type="checkbox" id="prAdhan" ${p.adhan?"checked":""}> تشغيل الأذان عند دخول الوقت</label>
+        <div class="adhpick"><b>اختر المؤذّن</b>${ADHANS.map(a=>`<div class="adhopt ${p.adhanId===a.id?"on":""}"><label class="ck"><input type="radio" name="adhId" value="${a.id}" ${p.adhanId===a.id?"checked":""}> <span>${a.n}<small class="muted"> ${a.q}</small></span></label><button class="btn icon" data-adhprev="${a.f}" aria-label="استماع">${ic("volume")}</button></div>`).join("")}</div>
+        <div class="adhpick"><b>أذان الفجر</b>${[{id:"same",n:"نفس الأذان المختار أعلاه",q:""},FAJR_ADHAN].map(a=>`<div class="adhopt ${p.adhanFajrId===a.id?"on":""}"><label class="ck"><input type="radio" name="adhFj" value="${a.id}" ${p.adhanFajrId===a.id?"checked":""}> <span>${a.n}<small class="muted"> ${a.q}</small></span></label>${a.f?`<button class="btn icon" data-adhprev="${a.f}" aria-label="استماع">${ic("volume")}</button>`:""}</div>`).join("")}</div>
         <label class="ck"><input type="checkbox" id="prAdhanF" ${p.adhanFajr?"checked":""}> الأذان في صلاة الفجر أيضاً</label>
         <label class="ck"><input type="checkbox" id="prAdk" ${p.remAdhkar?"checked":""}> تذكير بأذكار الصباح بعد الفجر وأذكار المساء بعد العصر</label>
         <label>مستوى صوت الأذان <input type="range" id="prVol" min="0.1" max="1" step="0.1" value="${p.vol}"></label>
@@ -2086,7 +2111,7 @@ function renderPrayer(){
         <div class="small" style="display:grid;gap:8px;margin-top:6px">
           <p>صفحات الويب لا يُسمح لها بالعمل وهي مغلقة، فلهذا طريقتان مكمّلتان للبرنامج:</p>
           <p><b>١. تقويم Google:</b> مواعيد الصلوات بتنبيه قبلها بربع ساعة، فيرنّ الهاتف ولو كان البرنامج مغلقاً.</p>
-          <p><b>٢. تطبيق «الأذان» (Al-Azan) لأندرويد:</b> مجاني ومفتوح المصدر وبلا إعلانات، وأذانه الافتراضي هو أذان المسجد النبوي نفسه المستعمل هنا، ويؤذّن في وقته والهاتف مقفل.
+          <p><b>٢. تطبيق «الأذان» (Al-Azan) لأندرويد:</b> مجاني ومفتوح المصدر وبلا إعلانات، وأذانه الافتراضي من المسجد النبوي (وهو الأخير في قائمة المؤذنين هنا)، ويؤذّن في وقته والهاتف مقفل.
           <a href="https://f-droid.org/packages/com.github.meypod.al_azan/" target="_blank" rel="noopener">صفحته على F-Droid</a> · <a href="https://github.com/meypod/al-azan" target="_blank" rel="noopener">صفحته على GitHub</a></p>
         </div></details>
     </section>
@@ -2117,6 +2142,13 @@ function renderPrayer(){
   const P = PP();
   const wb = $("#wakeBtn"); setWakeBtn(wb); wb.onclick = ()=>{ window.__wantWake = !wakeLock; toggleWake(wb); };
   $("#adhPrev").onclick = ()=>{ if (ADH.paused) playAdhan(); else stopAdhan(); };
+  document.querySelectorAll("[data-adhprev]").forEach(b=>b.onclick = ()=>{
+    const f = b.dataset.adhprev, same = ADH.src.endsWith(f) && !ADH.paused;
+    stopAdhan(); if (same) return;
+    ADH.src = f; ADH.volume = PP().vol; ADH.muted = false; const pr = ADH.play(); if (pr && pr.catch) pr.catch(()=>{});
+  });
+  document.querySelectorAll('input[name="adhId"]').forEach(r=>r.onchange = ()=>{ P.adhanId = r.value; save(); stopAdhan(); warmAdhan(); document.querySelectorAll('input[name="adhId"]').forEach(x=>x.closest(".adhopt").classList.toggle("on", x.checked)); });
+  document.querySelectorAll('input[name="adhFj"]').forEach(r=>r.onchange = ()=>{ P.adhanFajrId = r.value; save(); stopAdhan(); warmAdhan(); document.querySelectorAll('input[name="adhFj"]').forEach(x=>x.closest(".adhopt").classList.toggle("on", x.checked)); });
   renderPrayerBtn();
   const nb = $("#notifBtn");
   if (nb) nb.onclick = async ()=>{ try { const r = await Notification.requestPermission(); $("#notifInfo").textContent = r==="granted" ? "تم تفعيل إشعارات المتصفح، وستظهر حتى لو كنت في تبويب آخر (والصفحة مفتوحة)." : "لم يسمح المتصفح بالإشعارات هنا، وستبقى التنبيهات داخل الصفحة."; } catch(e){ $("#notifInfo").textContent = "إشعارات المتصفح غير متاحة هنا، وستبقى التنبيهات داخل الصفحة."; } };

@@ -1,5 +1,5 @@
 /* offline cache for the Baqarah companion: app shell precached, recitations cached on demand or by "download all" */
-const SHELL = "shell-5d10fa98", AUDIO = "audio-v1";
+const SHELL = "shell-47acc2ab", AUDIO = "audio-v1";
 const SHELL_FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "adhan/madinah.mp3"];
 
 self.addEventListener("install", e => {
@@ -35,7 +35,7 @@ self.addEventListener("fetch", e => {
       if (!hit){
         const net = await fetch(key, remote ? {mode:"cors"} : undefined);
         if (!net.ok) return net;
-        if (remote || /\/audio\//.test(url.pathname)){ const c = await caches.open(AUDIO); await c.put(key, net.clone()); }
+        if (remote || /\/(audio|adhan)\//.test(url.pathname)){ const c = await caches.open(AUDIO); await c.put(key, net.clone()); }
         hit = net;
       }
       return ranged(req, hit);

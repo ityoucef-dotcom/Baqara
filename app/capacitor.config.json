@@ -1,0 +1,6 @@
+{
+  "appId": "com.belhadia.rafiq",
+  "appName": "رفيق حفظ القرآن",
+  "webDir": "www",
+  "ios": { "contentInset": "never", "scheme": "Rafiq" }
+}

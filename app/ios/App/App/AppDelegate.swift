@@ -4,6 +4,7 @@ import UserNotifications
 import SwiftUI
 #if canImport(AlarmKit)
 import AlarmKit
+import ActivityKit
 #endif
 
 @UIApplicationMain

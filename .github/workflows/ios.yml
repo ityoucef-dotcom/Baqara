@@ -40,8 +40,10 @@ jobs:
         run: |
           xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO build | tail -60
-          test ${PIPESTATUS[0]} -eq 0
+            CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 && ok=1 || ok=0
+          grep -E "error:|warning: .*AppDelegate" build.log | sort -u | head -40 || true
+          tail -15 build.log
+          test $ok -eq 1
       - name: Archive and upload to TestFlight
         if: ${{ inputs.upload }}
         working-directory: app/ios/App

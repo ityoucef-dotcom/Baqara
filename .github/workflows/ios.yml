@@ -2,7 +2,7 @@ name: iOS app
 on:
   push:
     branches: [ios-app]
-    paths: ["app/**", "index.html", ".github/workflows/ios.yml"]
+    paths: ["app/**", "index.html", "tafsir/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
       upload:

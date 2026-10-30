@@ -62,6 +62,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+		<key>NSMicrophoneUsageDescription</key>
+	<string>يستمع البرنامج إلى قراءتك ليتابع تسميعك ويكشف الكلمات.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>يحوّل البرنامج قراءتك إلى نص ليقارنها بالآيات أثناء التسميع.</string>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>ليرنّ التطبيق بمنبّه حقيقي عند الأذان وقيام الليل وساعة الجمعة ووقت الاستيقاظ والخروج.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

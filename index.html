@@ -685,6 +685,7 @@ details summary{cursor:pointer;color:var(--accent);font-size:.9rem}
 .daypick .dchip span{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--raised);font-size:.85rem}
 .daypick .dchip input:checked+span{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .formgrid input[type=time]{font:inherit;color:var(--ink);background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-height:38px;width:100%}
+.natbox{display:grid;gap:8px;padding:12px;border-radius:14px;border:1px solid var(--accent);background:var(--accent-soft);margin-bottom:8px}
 /* Islamic layer: girih (8-point star) lattice, gold illumination, mihrab frames, Ruqaa display type */
 :root{
   --f-cal:"Aref Ruqaa","Amiri",serif; --f-nas:"Amiri","Noto Naskh Arabic",serif;
@@ -2063,7 +2064,7 @@ function tick(){
     if (diff<=0 && diff > -180000 && !wasFired("adhan_"+k)){
       markFired("adhan_"+k);
       const sound = p.adhan && (k!=="fajr" || p.adhanFajr);
-      if (sound) playAdhan(k==="fajr");
+      if (sound && !window.__nativeRings) playAdhan(k==="fajr");
       showAlert({kind:"adhan", title:`حان الآن وقت صلاة ${PNAMES[k]}`, sub:`${cityNow().name} · ${hm(at)}`, body:remHTML(PRAYER_REM[(remIdx++)%PRAYER_REM.length]), actions:[{t:"إيقاف الأذان",ic:"x",fn:stopAdhan}]});
     }
   }
@@ -2423,7 +2424,7 @@ function nextFriday(now){ now = now || new Date(); let d = new Date(now); for (l
 function qiyamAt(n){ const p = WP(); return p.remQiyam>0 ? new Date(n.third.getTime() - p.remQiyam*60000) : null; }
 
 function chime(){
-  if (!WP().chime) return;
+  if (!WP().chime || window.__nativeRings) return;
   try {
     const C = window.__actx || (window.__actx = new (window.AudioContext||window.webkitAudioContext)());
     if (C.state==="suspended") C.resume();
@@ -2521,12 +2522,13 @@ function worshipPanelHTML(){
       <label class="ck"><input type="checkbox" id="wKahf" ${p.remKahf?"checked":""}> تذكير صباح الجمعة بسورة الكهف والصلاة على النبي ﷺ</label>
       <label class="ck"><input type="checkbox" id="wChime" ${p.chime?"checked":""}> نغمة هادئة مع تنبيهات الليل والجمعة</label>
     </div>
-    <div class="ptip small"><b>ليرنّ الهاتف والبرنامج مغلق:</b> صفحات الويب لا تستطيع التنبيه وهي مغلقة، فأضف المواعيد إلى تقويم هاتفك. يصنع الزر ملفاً فيه مواعيد الصلوات الخمس وقيام الليل والثلث الأخير وساعة الجمعة لـ٣٠ يوماً، وأذكار الصباح والخروج، حسب اختياراتك، مع تنبيه في كل موعد. على الآيفون اضغط «إضافة الكل» بعد فتحه، وأعد التصدير كل شهر.</div>
-    <div class="row"><button class="btn primary" id="wIcs">${ic("calendar")}أضف المواعيد إلى تقويم الهاتف</button></div><p class="small muted" id="wIcsInfo"></p>
+    ${NAT() ? nativePanelHTML() : ""}
+    <div class="ptip small" ${NAT()?"hidden":""}><b>ليرنّ الهاتف والبرنامج مغلق:</b> صفحات الويب لا تستطيع التنبيه وهي مغلقة، فأضف المواعيد إلى تقويم هاتفك. يصنع الزر ملفاً فيه مواعيد الصلوات الخمس وقيام الليل والثلث الأخير وساعة الجمعة لـ٣٠ يوماً، وأذكار الصباح والخروج، حسب اختياراتك، مع تنبيه في كل موعد. على الآيفون اضغط «إضافة الكل» بعد فتحه، وأعد التصدير كل شهر.</div>
+    <div class="row" ${NAT()?"hidden":""}><button class="btn primary" id="wIcs">${ic("calendar")}أضف المواعيد إلى تقويم الهاتف</button></div><p class="small muted" id="wIcsInfo"></p>
   </section>`;
 }
 function bindWorshipPanel(){
-  const p = WP(), re = ()=>{ save(); renderPrayer(); };
+  const p = WP(), re = ()=>{ save(); renderPrayer(); nativeSchedule(true); };
   const g = id=>document.getElementById(id); if (!g("wQiyam")) return;
   g("wQiyam").onchange = e=>{ p.remQiyam = +e.target.value; re(); };
   g("wThird").onchange = e=>{ p.remThird = e.target.checked; save(); };
@@ -2534,6 +2536,7 @@ function bindWorshipPanel(){
   g("wKahf").onchange = e=>{ p.remKahf = e.target.checked; save(); };
   g("wChime").onchange = e=>{ p.chime = e.target.checked; save(); if (p.chime) chime(); };
   g("wIcs").onclick = exportICS;
+  bindNativePanel();
   g("wWake").onchange = e=>{ p.remWake = e.target.checked; save(); };
   g("wLeave").onchange = e=>{ p.remLeave = e.target.checked; save(); };
   g("wWakeAt").onchange = e=>{ if (e.target.value) { p.wakeAt = e.target.value; save(); } };
@@ -2542,33 +2545,102 @@ function bindWorshipPanel(){
 }
 
 /* iCalendar file: one event per reminder, each with its own alarm */
-function icsText(days){
-  const p = WP(), c = cityNow(), ev = [], now = new Date(), stamp = icsDate(now);
-  const add = (uid, at, mins, title, desc, alarms)=>{
-    if (!at || isNaN(at) || at < now) return;
-    ev.push(["BEGIN:VEVENT", "UID:"+uid+"-"+at.getTime()+"@rafiq-quran", "DTSTAMP:"+stamp, "DTSTART:"+icsDate(at), "DTEND:"+icsDate(new Date(at.getTime()+mins*60000)),
-      "SUMMARY:"+icsEsc(title), "DESCRIPTION:"+icsEsc(desc), "TRANSP:TRANSPARENT",
-      ...alarms.map(m=>["BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(title),"TRIGGER:"+(m?"-PT"+m+"M":"PT0M"),"END:VALARM"].join("\r\n")), "END:VEVENT"].join("\r\n"));
-  };
+/* every reminder for the coming days; used by the calendar file and by the iPhone app */
+function reminderEvents(days){
+  const p = WP(), c = cityNow(), ev = [], now = new Date();
+  const add = (key, group, at, mins, title, desc, pre)=>{ if (at && !isNaN(at) && at >= now) ev.push({key, group, at, mins, title, desc, pre:pre||0}); };
   for (let i=0;i<days;i++){
     const d = shiftDay(now,i); d.setHours(12,0,0,0);
     const t = dayTimes(d);
-    for (const k of PRAYERS) add("salat-"+k, t[k], 15, "صلاة "+PNAMES[k], "حان وقت صلاة "+PNAMES[k]+" في "+c.name, p.pre>0 ? [p.pre,0] : [0]);
+    for (const k of PRAYERS) add("salat-"+k, "prayer", t[k], 15, "صلاة "+PNAMES[k], "حان وقت صلاة "+PNAMES[k]+" في "+c.name, p.pre);
     const n = nightOf(d), q = qiyamAt(n);
-    if (q) add("qiyam", q, 10, "قيام الليل", "قم إلى صلاة الليل. يبدأ الثلث الأخير الساعة "+hm(n.third), [0]);
-    if (p.remThird) add("third", n.third, Math.round((n.end-n.third)/60000), "الثلث الأخير من الليل", "ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر (متفق عليه). إلى أذان الفجر "+hm(n.end), [0]);
+    if (q) add("qiyam", "night", q, 10, "قيام الليل", "قم إلى صلاة الليل. يبدأ الثلث الأخير الساعة "+hm(n.third));
+    if (p.remThird) add("third", "night", n.third, Math.round((n.end-n.third)/60000), "الثلث الأخير من الليل", "ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر (متفق عليه). إلى أذان الفجر "+hm(n.end));
     const wk = wakeTime(d), lv = leaveTime(d);
-    if (wk) add("wake", wk, 15, "أذكار الصباح", "صباح الخير. ابدأ يومك بأذكار الصباح", [0]);
-    if (lv) add("leave", lv, 10, "أذكار الخروج إلى العمل", "بسم الله، توكلت على الله، لا حول ولا قوة إلا بالله. واسأل الله التوفيق والتيسير والبركة", [0]);
+    if (wk) add("wake", "morning", wk, 15, "أذكار الصباح", "صباح الخير. ابدأ يومك بأذكار الصباح");
+    if (lv) add("leave", "morning", lv, 10, "أذكار الخروج إلى العمل", "بسم الله، توكلت على الله، لا حول ولا قوة إلا بالله. واسأل الله التوفيق والتيسير والبركة");
     if (d.getDay()===5){
       const j = jumuaHour(d);
-      if (p.remJumua) add("jumua", j.start, j.mins, "آخر ساعة من يوم الجمعة", "ساعة ترجى فيها الإجابة: فالتمسوها آخر ساعة بعد العصر (أبو داود والنسائي، وصححه الألباني). إلى المغرب "+hm(j.end), [0]);
-      if (p.remKahf) add("kahf", new Date(t.sunrise.getTime()+30*60000), 30, "الجمعة: سورة الكهف والصلاة على النبي ﷺ", "اقرأ سورة الكهف وأكثر من الصلاة على النبي ﷺ", [0]);
+      if (p.remJumua) add("jumua", "jumua", j.start, j.mins, "آخر ساعة من يوم الجمعة", "ساعة ترجى فيها الإجابة: فالتمسوها آخر ساعة بعد العصر (أبو داود والنسائي، وصححه الألباني). إلى المغرب "+hm(j.end));
+      if (p.remKahf) add("kahf", "kahf", new Date(t.sunrise.getTime()+30*60000), 30, "الجمعة: سورة الكهف والصلاة على النبي ﷺ", "اقرأ سورة الكهف وأكثر من الصلاة على النبي ﷺ");
     }
   }
+  return ev.sort((a,b)=>a.at-b.at);
+}
+function icsText(days){
+  const stamp = icsDate(new Date());
+  const ev = reminderEvents(days).map(e=>["BEGIN:VEVENT", "UID:"+e.key+"-"+e.at.getTime()+"@rafiq-quran", "DTSTAMP:"+stamp, "DTSTART:"+icsDate(e.at), "DTEND:"+icsDate(new Date(e.at.getTime()+e.mins*60000)),
+      "SUMMARY:"+icsEsc(e.title), "DESCRIPTION:"+icsEsc(e.desc), "TRANSP:TRANSPARENT",
+      ...(e.pre>0 ? [e.pre,0] : [0]).map(m=>["BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(e.title),"TRIGGER:"+(m?"-PT"+m+"M":"PT0M"),"END:VALARM"].join("\r\n")), "END:VEVENT"].join("\r\n"));
   const all = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Rafiq Quran//AR","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:"+icsEsc("رفيق حفظ القرآن"), ...ev, "END:VCALENDAR"].join("\r\n");
   return all.split("\r\n").map(icsFold).join("\r\n");
 }
+
+/* ---------- iPhone app: real alarms (iOS 26) or notifications, scheduled ahead ---------- */
+const NAT = () => window.NATIVE_APP && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.RafiqAlarms;
+// short (under 30 s) copies of each adhan bundled in the app: adhan/x.mp3 -> sounds/adhan_x.caf
+const cafFor = a => "adhan_" + a.f.split("/").pop().replace(/\.mp3$/, ".caf");
+const NAT_GROUPS = [["prayer","الأذان في أوقات الصلاة"],["night","قيام الليل والثلث الأخير"],["morning","الاستيقاظ والخروج إلى العمل"],["jumua","آخر ساعة من يوم الجمعة"]];
+function natPrefs(){ const p = WP(); p.nat = Object.assign({prayer:"alarm", night:"alarm", morning:"alarm", jumua:"alarm"}, p.nat||{}); return p.nat; }
+function nativeItems(days){
+  const p = WP(), np = natPrefs(), out = [];
+  const adhanSnd = fajr => cafFor((fajr && p.adhanFajrId===FAJR_ADHAN.id) ? FAJR_ADHAN : (ADHANS.find(a=>a.id===p.adhanId)||ADHANS[0]));
+  for (const e of reminderEvents(days)){
+    const mode = e.group==="kahf" ? "notif" : (np[e.group]||"notif");
+    if (e.group==="prayer"){
+      if (e.pre > 0) out.push({id:e.key+"-pre-"+e.at.getTime(), at:e.at.getTime()-e.pre*60000, title:`بقي ${e.pre} دقيقة على صلاة ${e.title.replace("صلاة ","")}`, body:"تهيّأ وتوضّأ", sound:"chime.caf", alarm:false});
+      const fajr = e.key==="salat-fajr", sound = p.adhan && (!fajr || p.adhanFajr);
+      if (mode!=="off") out.push({id:e.key+"-"+e.at.getTime(), at:e.at.getTime(), title:e.title, body:e.desc, sound: sound ? adhanSnd(fajr) : "chime.caf", alarm: mode==="alarm"});
+      continue;
+    }
+    if (mode==="off") continue;
+    out.push({id:e.key+"-"+e.at.getTime(), at:e.at.getTime(), title:e.title, body:e.desc, sound:"chime.caf", alarm: mode==="alarm"});
+  }
+  // a gentle nudge before the schedule runs out
+  const last = out.length ? out[out.length-1].at : Date.now()+days*864e5;
+  out.push({id:"renew-"+last, at:last - 12*3600e3, title:"افتح رفيق القرآن", body:"افتح التطبيق مرة ليجدّد منبّهات الأيام القادمة", sound:"chime.caf", alarm:false});
+  return out;
+}
+let natSig = "", natAt = 0, natLast = null;
+async function nativeSchedule(force){
+  const P = NAT(); if (!P) return null;
+  const p = WP(), sig = JSON.stringify([p.nat, p.adhan, p.adhanFajr, p.adhanId, p.adhanFajrId, p.pre, p.remQiyam, p.remThird, p.remJumua, p.remKahf, p.remWake, p.wakeAt, p.remLeave, p.leaveAt, p.leaveDays, p.city, p.method, p.asr, p.adj]);
+  if (!force && sig===natSig && Date.now()-natAt < 6*3600e3) return natLast;
+  natSig = sig; natAt = Date.now();
+  try { natLast = await P.schedule({items: nativeItems(7)}); window.__nativeRings = (natLast.alarms + natLast.notifications) > 0; }
+  catch(e){ natLast = {error: String(e && e.message || e)}; }
+  return natLast;
+}
+if (window.NATIVE_APP){
+  setTimeout(()=>nativeSchedule(true), 2500);
+  setInterval(()=>nativeSchedule(false), 60000);
+  document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) nativeSchedule(false); });
+}
+function nativePanelHTML(){
+  const np = natPrefs(), opts = [["alarm","منبّه يرنّ"],["notif","إشعار بصوت"],["off","بدون"]];
+  return `<div class="natbox"><b>منبّهات التطبيق</b>
+    <p class="small">على iOS 26 أو أحدث يرنّ التطبيق بمنبّه حقيقي يظهر على الشاشة ولو كان الهاتف صامتاً، وعلى الإصدارات الأقدم يصل إشعار بصوت الأذان (أول ٣٠ ثانية).</p>
+    <div class="formgrid">${NAT_GROUPS.map(([k,t])=>`<label>${t} <select data-natg="${k}">${opts.map(([v,l])=>`<option value="${v}" ${np[k]===v?"selected":""}>${l}</option>`).join("")}</select></label>`).join("")}</div>
+    <div class="row"><button class="btn primary" id="natPerm">${ic("bell")}السماح بالمنبّهات</button><button class="btn" id="natTest">${ic("volume")}جرّب بعد ١٠ ثوانٍ</button></div>
+    <p class="small muted" id="natInfo">…</p></div>`;
+}
+async function natStatusText(){
+  const P = NAT(); if (!P) return "";
+  try {
+    const s = await P.status(), r = natLast || {};
+    const st = {authorized:"مسموح", denied:"مرفوض (فعّله من الإعدادات)", notDetermined:"لم يُطلب بعد", unavailable:"غير متوفر (يحتاج iOS 26)"};
+    return `المنبّهات: ${st[s.alarms]||s.alarms} · الإشعارات: ${st[s.notifications]||s.notifications}. المجدول الآن: ${s.scheduledAlarms} منبّهاً و${s.pendingNotifications} إشعاراً للأيام السبعة القادمة${r.failed?` (تعذّر ${r.failed})`:""}.`;
+  } catch(e){ return "تعذّر قراءة حالة المنبّهات."; }
+}
+function bindNativePanel(){
+  const P = NAT(); if (!P) return;
+  const info = document.getElementById("natInfo"), show = async ()=>{ if (info) info.textContent = await natStatusText(); };
+  document.querySelectorAll("[data-natg]").forEach(s=>s.onchange = async ()=>{ natPrefs()[s.dataset.natg] = s.value; save(); await nativeSchedule(true); show(); });
+  document.getElementById("natPerm").onclick = async ()=>{ try { await P.requestPermissions(); } catch(e){} await nativeSchedule(true); show(); };
+  document.getElementById("natTest").onclick = async ()=>{ const p = WP(); try { const r = await P.test({seconds:10, title:"تجربة منبّه رفيق القرآن", body:"هكذا سيرنّ وقت الصلاة", sound:cafFor(ADHANS.find(a=>a.id===p.adhanId)||ADHANS[0]), alarm: natPrefs().prayer==="alarm"}); if (info) info.textContent = r.kind==="alarm" ? "سيرنّ منبّه بعد ١٠ ثوانٍ، ويمكنك قفل الهاتف." : "سيصل إشعار بصوت الأذان بعد ١٠ ثوانٍ، ويمكنك قفل الهاتف."; } catch(e){ if (info) info.textContent = "تعذّرت التجربة: "+e; } };
+  show();
+}
+
 // RFC 5545: lines longer than 75 bytes continue on the next line after a space
 function icsFold(line){
   const enc = new TextEncoder(); if (enc.encode(line).length <= 75) return line;

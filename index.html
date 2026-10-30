@@ -893,6 +893,44 @@ body.has-player .alertbox{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
 .pace small{color:var(--muted);font-size:.78rem}
 .pace.on{border-color:var(--accent);background:var(--accent-soft)}
 .pace .rec{position:absolute;top:-9px;inset-inline-start:8px;background:var(--gold);color:#fff;font-size:.65rem;border-radius:99px;padding:0 7px;line-height:1.6}
+/* memorization engine v2 */
+.v.weakv{text-decoration:underline wavy color-mix(in oklab,var(--bad) 70%,transparent);text-underline-offset:.45em;text-decoration-thickness:1.5px}
+.v.weakv .am{background:color-mix(in oklab,var(--bad) 18%,transparent);border-radius:999px}
+.btn.weakon{border-color:var(--bad);color:var(--bad)}
+.weaklist{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}
+.wchip{border-color:color-mix(in oklab,var(--bad) 45%,var(--line))}
+.w.said{color:inherit;background:color-mix(in oklab,var(--good) 14%,transparent);border-radius:4px}
+.w.miss{color:var(--bad)!important;background:color-mix(in oklab,var(--bad) 12%,transparent);border-radius:4px}
+.w.miss *{color:var(--bad)!important}
+#voiceBtn.live{background:var(--bad);border-color:var(--bad);color:#fff;animation:vpulse 1.4s ease-in-out infinite}
+@keyframes vpulse{50%{box-shadow:0 0 0 6px color-mix(in oklab,var(--bad) 22%,transparent)}}
+@media (prefers-reduced-motion:reduce){#voiceBtn.live{animation:none}}
+.tafsir{margin:10px 0;padding:12px 14px;border-radius:12px;background:var(--sunk);border-inline-start:3px solid var(--gold)}
+.tafsir p{margin:0 0 6px;font-family:var(--f-nas,"Amiri",serif);font-size:1.08rem;line-height:1.95}
+/* folded extras on the today screen */
+section.fold .fold-h{cursor:pointer;user-select:none;position:relative;padding-inline-end:28px}
+section.fold .fold-h::after{content:"";position:absolute;inset-inline-end:4px;top:50%;width:9px;height:9px;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+section.fold.open .fold-h::after{transform:translateY(-30%) rotate(-135deg)}
+section.fold:not(.open) > .fold-b{display:none}
+section.fold:not(.open){padding-block:14px}
+/* next-word drill */
+.nw-ctx{font-family:var(--f-q,"Amiri Quran",serif);font-size:1.6rem;line-height:2.3;margin:14px 0;text-align:center}
+.nw-gap{display:inline-block;min-width:2.4em;border-bottom:2px dashed var(--gold);color:var(--gold)}
+.nw-opts{display:grid;gap:10px;margin-bottom:14px}
+.nw-o{font-family:var(--f-q,"Amiri Quran",serif);font-size:1.5rem;padding:10px 14px;min-height:56px;border-radius:14px;border:1.5px solid var(--line);background:var(--raised);color:var(--ink);cursor:pointer}
+.nw-o:hover:not(:disabled){border-color:var(--accent)}
+.nw-o.ok{border-color:var(--good);background:color-mix(in oklab,var(--good) 14%,var(--raised))}
+.nw-o.bad{border-color:var(--bad);background:color-mix(in oklab,var(--bad) 12%,var(--raised))}
+/* page-by-page mushaf */
+.pgv{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.pgv-h{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.pgv-h b{flex:1}
+.pgv-s{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.pg{flex:0 0 100%;scroll-snap-align:start;overflow-y:auto;padding:14px 12px calc(20px + env(safe-area-inset-bottom,0px))}
+/* alert bodies: three lines, tap to read all */
+.alertbox .al-b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.alertbox .al-b.full{display:block}
+.alertbox .al-h b{font-family:var(--f-ui)}
 </style>
 
 <div class="wrap">
@@ -1489,7 +1527,7 @@ function renderToday(){
   ${p.type==="new"?`<section class="panel"><div class="ph"><span class="badge">${ic("palette")}</span><h2>أحكام التجويد في ورد اليوم</h2></div>${lessonHTML}
     <details><summary>كل الأحكام الموجودة في الورد</summary><div style="display:grid;gap:14px;margin-top:10px">${CUR.filter(k=>k!==p.lesson && !(p.group&&p.group.keys.includes(k)) && occurrences(k,verses).length).map(k=>lessonBlock(k,verses)).join("")}</div></details></section>`:""}
 
-  ${(()=>{ const m = mutHTML(verses); return m?`<section class="panel"><div class="ph"><span class="badge gold">${ic("repeat")}</span><h2>انتبه للمتشابهات</h2></div><p class="small muted">مقاطع تتكرر بألفاظ متقاربة داخل سورة البقرة. ركّز على الكلمة التي تختلف بعد المقطع المظلل، فهي موضع الخطأ عند أكثر الحفاظ.</p><div class="mut">${m}</div></section>`:""; })()}
+  ${(()=>{ const m = mutHTML(verses); return m?`<section class="panel"><div class="ph"><span class="badge gold">${ic("repeat")}</span><h2>انتبه للمتشابهات</h2></div><p class="small muted">مقاطع تتكرر بألفاظ متقاربة داخل سورة ${DATA.name}. ركّز على الكلمة التي تختلف بعد المقطع المظلل، فهي موضع الخطأ عند أكثر الحفاظ.</p><div class="mut">${m}</div></section>`:""; })()}
 
   <section class="panel"><div class="ph"><span class="badge">${ic("target")}</span><h2>${p.type==="new"?"المراجعة المقررة اليوم":"أوراد المراجعة"}</h2></div>
     ${revs.length?`<div class="revlist">${revs.map(r=>{ const q = NEWS[r.n]; const rt = S.rating[r.n];
@@ -2905,6 +2943,363 @@ function openSurah(n, pace){
   const st = $("#surStart"); if (st) st.onclick = ()=>go(true);
   const pk = $("#surPeek"); if (pk) pk.onclick = ()=>go(false);
 }
+/* ---------- memorization engine v2: days advance by completion, long-term review across surahs,
+   weak verses, next-word drill, voice recitation test, tafsir, focused today screen ---------- */
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dnum(s){ return Math.round(new Date(s+"T12:00:00")/864e5); }
+function noon(s){ return new Date(s+"T12:00:00"); }
+function pad3(n){ return String(n).padStart(3,"0"); }
+PER.push("rcount");
+function RC(){ return S.rcount || (S.rcount = {}); }
+
+// the plan day on the calendar, and the first portion not yet finished
+function calDay(){ return S.start ? Math.max(1, dnum(todayStr()) - dnum(S.start) + 1) : 1; }
+function firstUndone(){ let f = 1; while (f <= PLAN.length && S.done[f]) f++; return f; }
+// a missed day no longer skips its portion: today is the first unfinished day, never ahead of the calendar
+function currentDay(){
+  if (!S.start) return 1;
+  return Math.min(PLAN.length, Math.max(1, Math.min(calDay(), firstUndone())));
+}
+function lateDays(){ const cd = currentDay(); return S.start && !S.done[cd] ? Math.max(0, calDay() - cd) : 0; }
+function dateOf(day){
+  if (!S.start) return "";
+  const s = S.done[day];
+  let d;
+  if (typeof s === "string") d = noon(s);
+  else { d = noon(todayStr()); d.setDate(d.getDate() + day - currentDay()); }
+  return d.toLocaleDateString("ar-DZ",{weekday:"long",day:"numeric",month:"long"});
+}
+
+// streak = consecutive calendar days with any finished portion or long-term review, in any surah
+function activeDates(){
+  const set = new Set(), add = o => { for (const v of Object.values(o||{})) if (typeof v === "string") set.add(v); };
+  add(S.done); for (const x of Object.values(S.sur||{})) add(x && x.done);
+  for (const k of Object.keys(S.farLog||{})) set.add(k);
+  return set;
+}
+function totals(){
+  const doneNew = NEWS.filter(p=>S.done[p.day]);
+  const verses = doneNew.reduce((s,p)=>s+p.verses.length,0);
+  const pages = new Set(doneNew.flatMap(p=>p.verses.map(a=>V[a-1].p))).size;
+  const ds = activeDates(), d = noon(todayStr());
+  if (!ds.has(todayStr())) d.setDate(d.getDate()-1);
+  let streak = 0; while (ds.has(ymd(d))){ streak++; d.setDate(d.getDate()-1); }
+  let listen = 0, reps = 0; for (const v of Object.values(S.log)){ listen += v.listen||0; reps += v.reps||0; }
+  return {doneNew, verses, pages, streak, listen, reps};
+}
+
+/* ----- weak verses (global, keyed "surah:ayah") ----- */
+function W(){ return S.weakV || (S.weakV = {}); }
+function wkey(a, s=SUR){ return s+":"+a; }
+function isWeak(a, s=SUR){ return !!W()[wkey(a,s)]; }
+function toggleWeak(a, s=SUR){
+  const k = wkey(a,s);
+  if (W()[k]) delete W()[k]; else W()[k] = {at: todayStr(), ok: 0};
+  save();
+}
+function weakPortions(){
+  const out = new Set();
+  for (const k of Object.keys(W())){ const [s,a] = k.split(":").map(Number); if (s!==SUR) continue;
+    const q = NEWS.find(q=>q.verses.includes(a)); if (q) out.add(q.n); }
+  return [...out];
+}
+function markWeakInMushaf(){
+  document.querySelectorAll(".v.weakv").forEach(e=>e.classList.remove("weakv"));
+  for (const k of Object.keys(W())){ const [s,a] = k.split(":").map(Number); if (s!==SUR) continue;
+    document.querySelectorAll(`.v[data-v="${a}"]`).forEach(e=>e.classList.add("weakv")); }
+}
+
+function reviewsFor(p){
+  if (p.type!=="new") return p.block.map(n=>({n,why:"مراجعة الأسبوع"}));
+  const out = [], seen = new Set();
+  const add = (n,why)=>{ if (n>=0 && n<p.n && !seen.has(n)){ seen.add(n); out.push({n,why}); } };
+  add(p.n-1,"ربط: ورد الأمس");
+  add(p.n-3,"مراجعة بعد ٣ أيام");
+  add(p.n-6,"مراجعة بعد أسبوع");
+  add(p.n-13,"مراجعة بعد أسبوعين");
+  for (const n of weakPortions()) add(n,"فيه آيات علّمتها ضعيفة");
+  for (const [n,r] of Object.entries(S.rating)){ if (r==="b") add(+n,"ضعيف: يعود يومياً حتى يثبت"); }
+  for (const [n,r] of Object.entries(S.rating)){ if (r==="m" && (p.n - +n) % 2 === 0) add(+n,"متوسط: يعود كل يومين"); }
+  return out;
+}
+
+// finishing a day counts as one good review for every weak/medium portion and weak verse reviewed that day;
+// after three, the rating rises one step by itself
+function promoteAfter(p){
+  const msgs = [];
+  for (const r of reviewsFor(p)){
+    const rt = S.rating[r.n];
+    if (rt==="b" || rt==="m"){
+      RC()[r.n] = (RC()[r.n]||0) + 1;
+      if (RC()[r.n] >= 3){ S.rating[r.n] = rt==="b" ? "m" : "g"; delete RC()[r.n]; msgs.push(`${portionLabel(NEWS[r.n])} صار «${rt==="b"?"متوسط":"متقن"}»`); }
+    }
+    for (const a of NEWS[r.n].verses){ const w = W()[wkey(a)]; if (!w) continue;
+      w.ok = (w.ok||0) + 1; if (w.ok >= 3){ delete W()[wkey(a)]; msgs.push(`الآية ${AR(a)} ثبتت`); } }
+  }
+  if (msgs.length) setTimeout(()=>toast("ما شاء الله: " + msgs.slice(0,3).join("، ")), 300);
+}
+
+/* ----- long-term review: everything memorized 14+ days ago, or in a finished surah, cycles about once a week ----- */
+function farUnits(){
+  const today = dnum(todayStr()), units = [], keep = [SUR, DATA, V];
+  syncSur();
+  try {
+    for (const [ns, x] of Object.entries(S.sur)){
+      const n = +ns; if (!x || !x.done || !Object.keys(x.done).length || !QALL.surahs[n]) continue;
+      SUR = n; DATA = QALL.surahs[n]; V = DATA.verses;
+      const plan = buildPlan(x.pace, true), finished = !!x.done[plan.length];
+      for (const q of plan){
+        if (q.type!=="new") continue; const d = x.done[q.day]; if (!d) continue;
+        const age = typeof d === "string" ? today - dnum(d) : 999;
+        if (finished || age >= 14) units.push({s:n, name:DATA.name, n:q.n, verses:q.verses, p1:V[q.verses[0]-1].p, p2:V[q.verses[q.verses.length-1]-1].p, words:q.verses.reduce((s,a)=>s+wordsOf(a),0)});
+      }
+    }
+  } finally { [SUR, DATA, V] = keep; }
+  return units;
+}
+function farToday(){
+  const units = farUnits(); if (!units.length) return null;
+  const total = units.reduce((s,u)=>s+u.words,0), target = Math.max(total/7, Math.min(total, WPP*0.75));
+  const fd = S.farDone && S.farDone.date === todayStr() ? S.farDone : null;
+  const start = (fd ? fd.pos : (S.farPos||0)) % units.length;
+  const pick = []; let acc = 0;
+  for (let k=0; k<units.length && (acc < target || !pick.length); k++){ const u = units[(start+k) % units.length]; pick.push(u); acc += u.words; }
+  return {units, pick, start, done: !!fd, days: Math.max(1, Math.round(total/target))};
+}
+function farPanelHTML(){
+  const f = farToday();
+  if (!f) return S.start ? `<section class="panel" id="farBox"><div class="ph"><span class="badge gold">${ic("repeat")}</span><h2>المراجعة البعيدة</h2></div><p class="small muted">كل ورد يمرّ عليه أسبوعان، وكل سورة تختمها، يدخل هنا ويعود إليك مرة كل أسبوع تقريباً حتى لا يتفلّت.</p></section>` : "";
+  return `<section class="panel" id="farBox"><div class="ph"><span class="badge gold">${ic("repeat")}</span><h2>المراجعة البعيدة</h2></div>
+    <p class="small muted">محفوظك القديم من كل السور يدور عليك كل ${daysAr(f.days)} تقريباً. ورد اليوم:</p>
+    <div class="revlist">${f.pick.map((u,i)=>`<div class="rev"><div><b>سورة ${u.name}: الآيات ${AR(u.verses[0])}–${AR(u.verses[u.verses.length-1])}</b> <span class="small muted">${u.p1===u.p2?"صفحة "+AR(u.p1):"الصفحات "+AR(u.p1)+"–"+AR(u.p2)}</span></div>
+      <div class="row"><button class="btn" data-far="${i}">${ic("mic")}سمّع</button></div></div>`).join("")}</div>
+    <div class="row" style="margin-top:10px"><button class="btn ${f.done?"done":"primary"}" id="farDoneBtn">${ic("check")}${f.done?"أنهيت المراجعة البعيدة اليوم":"أنهيت المراجعة البعيدة"}</button></div>
+  </section>`;
+}
+function bindFar(){
+  const f = farToday(); if (!f) return;
+  document.querySelectorAll("[data-far]").forEach(b=>b.onclick = ()=>openRecite(f.pick[+b.dataset.far]));
+  const db = $("#farDoneBtn"); if (db) db.onclick = ()=>{
+    S.farLog = S.farLog || {};
+    if (f.done){ S.farPos = S.farDone.pos; S.farDone = null; delete S.farLog[todayStr()]; }
+    else { S.farDone = {date: todayStr(), pos: f.start}; S.farPos = (f.start + f.pick.length) % f.units.length; S.farLog[todayStr()] = f.pick.length; }
+    save(); render();
+  };
+}
+// a sheet to recite any portion from memory: words hidden, tap to reveal, tap the verse number to mark it weak
+function openRecite(u){
+  const vs = QALL.surahs[u.s].verses;
+  const body = u.verses.map(a=>{ const v = vs[a-1];
+    return `<span class="v${isWeak(a,u.s)?" weakv":""}" data-v="${a}">${v.w.map((w,i)=>isMark(w)?`<span class="w mk">${w}</span>`:`<span class="w hid" data-i="${i}">${wtext(w)}</span>`).join(" ")} <span class="am" data-wk="${a}" role="button" tabindex="0" aria-label="علّم الآية ${a} ضعيفة">${AR(a)}</span></span> `; }).join("");
+  openSheet(`<h2 id="shTitle">سورة ${u.name}: الآيات ${AR(u.verses[0])}–${AR(u.verses[u.verses.length-1])}</h2>
+    <p class="small muted">اقرأ من حفظك، واضغط أي كلمة لتكشفها. اضغط رقم الآية لتعلّمها ضعيفة فتعود إليك في المراجعة.</p>
+    <div class="row"><button class="btn" id="rcAll">${ic("eye")}أظهر الكل</button>${u.s===SUR?`<button class="btn gold" id="rcPlay">${ic("headphones")}استمع</button>`:""}<button class="btn ghost" data-close>إغلاق</button></div>
+    <div class="mushaf"><div class="mushaf-in"><div class="qtext plain rc" style="--qsize:${S.prefs.size}rem">${body}</div></div></div>`);
+  const box = $("#shBody .rc");
+  box.onclick = e=>{
+    const wk = e.target.closest("[data-wk]");
+    if (wk){ const a = +wk.dataset.wk; toggleWeak(a, u.s); wk.closest(".v").classList.toggle("weakv", isWeak(a,u.s)); toast(isWeak(a,u.s)?`علّمت الآية ${AR(a)} ضعيفة`:`أزلت علامة الآية ${AR(a)}`); return; }
+    const w = e.target.closest(".w.hid"); if (w) w.classList.replace("hid","peek");
+  };
+  $("#rcAll").onclick = ()=>box.querySelectorAll(".w.hid").forEach(w=>w.classList.replace("hid","peek"));
+  const pl = $("#rcPlay"); if (pl) pl.onclick = ()=>play(u.verses, `مراجعة: الآيات ${u.verses[0]}–${u.verses[u.verses.length-1]}`);
+  document.querySelectorAll("#shBody [data-close]").forEach(b=>b.onclick = closeSheet);
+}
+
+/* ----- next-word drill ----- */
+function qn(s){ return s.replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ\u200B-\u200F]/g,"").replace(/[أإآٱٲٳ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/\s+/g,""); }
+function nextWordDrill(p){
+  const words = p.verses.flatMap(a=>V[a-1].w.map((w,i)=>({a,i,t:wtext(w)})).filter((x,i)=>!isMark(V[x.a-1].w[x.i])));
+  if (words.length < 8){ toast("الورد قصير جداً لهذا التمرين"); return; }
+  const n = Math.min(10, words.length-1), picks = new Set();
+  while (picks.size < n) picks.add(1 + Math.floor(Math.random()*(words.length-1)));
+  const Q = [...picks].sort((x,y)=>x-y).map(k=>{
+    const ans = words[k], an = qn(ans.t);
+    const pool = [...new Set(words.map(w=>w.t))].filter(t=>qn(t)!==an);
+    const near = pool.filter(t=>qn(t)[0]===an[0]), far = pool.filter(t=>qn(t)[0]!==an[0]);
+    const shuf = a => a.map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+    const opts = shuf([ans.t, ...shuf(near).concat(shuf(far)).slice(0,2)]);
+    return {ctx: words.slice(Math.max(0,k-6), k).map(w=>w.t).join(" "), ans: ans.t, a: ans.a, opts};
+  });
+  let i = 0, score = 0; const wrong = new Set();
+  const draw = ()=>{
+    if (i >= Q.length){
+      S.nw = S.nw || {}; S.nw[SUR+":"+p.day] = score + "/" + Q.length; save();
+      $("#shBody").innerHTML = `<h2 id="shTitle">النتيجة: ${AR(score)} من ${AR(Q.length)}</h2>
+        <p>${score===Q.length?"ممتاز، وردك متقن.":score>=Q.length*0.7?"جيد، راجع المواضع التي أخطأت فيها.":"تحتاج إلى مزيد من التكرار قبل الانتقال."}</p>
+        ${wrong.size?`<p class="small muted">الآيات التي أخطأت فيها: ${[...wrong].map(AR).join("، ")}</p><button class="btn primary" id="nwWeak">علّمها ضعيفة لتعود في المراجعة</button>`:""}
+        <div class="row"><button class="btn" id="nwAgain">تمرين جديد</button><button class="btn ghost" data-close>إغلاق</button></div>`;
+      const wb = $("#nwWeak"); if (wb) wb.onclick = ()=>{ for (const a of wrong) if (!isWeak(a)) W()[wkey(a)] = {at:todayStr(), ok:0}; save(); closeSheet(); render(); toast("أضفتها إلى الآيات الضعيفة"); };
+      $("#nwAgain").onclick = ()=>nextWordDrill(p);
+      document.querySelectorAll("#shBody [data-close]").forEach(b=>b.onclick = closeSheet);
+      return;
+    }
+    const q = Q[i];
+    $("#shBody").innerHTML = `<div class="spread"><h2 id="shTitle">ما الكلمة التالية؟</h2><span class="small muted num">${AR(i+1)} / ${AR(Q.length)}</span></div>
+      <div class="bar"><i style="width:${i/Q.length*100}%"></i></div>
+      <p class="nw-ctx">… ${q.ctx} <span class="nw-gap">؟</span></p>
+      <div class="nw-opts">${q.opts.map((t,k)=>`<button class="nw-o" data-k="${k}">${t}</button>`).join("")}</div>
+      <div class="row"><button class="btn primary" id="nwNext" hidden>التالي</button><button class="btn ghost" data-close>إنهاء</button></div>`;
+    document.querySelectorAll("#shBody [data-close]").forEach(b=>b.onclick = closeSheet);
+    document.querySelectorAll(".nw-o").forEach(b=>b.onclick = ()=>{
+      const ok = q.opts[+b.dataset.k] === q.ans;
+      if (ok) score++; else wrong.add(q.a);
+      document.querySelectorAll(".nw-o").forEach(x=>{ x.disabled = true; if (q.opts[+x.dataset.k]===q.ans) x.classList.add("ok"); });
+      if (!ok) b.classList.add("bad");
+      buzz && buzz(); const nx = $("#nwNext"); nx.hidden = false; nx.onclick = ()=>{ i++; draw(); };
+    });
+  };
+  openSheet(""); draw();
+}
+
+/* ----- voice recitation test (Web Speech API; experimental) ----- */
+const SRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let VOICE = null;
+function lev(a, b){ const m = a.length, n = b.length; if (!m || !n) return m||n; let prev = Array.from({length:n+1},(_,j)=>j);
+  for (let i=1;i<=m;i++){ const cur = [i]; for (let j=1;j<=n;j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev = cur; } return prev[n]; }
+const simW = (a, b) => { if (!a || !b) return 0; if (a===b) return 1; if (a.length<=2 || b.length<=2) return 0; return 1 - lev(a,b)/Math.max(a.length,b.length); };
+function stopVoice(){ if (!VOICE) return; VOICE.on = false; try { VOICE.rec.stop(); } catch(e){} VOICE = null; const b = $("#voiceBtn"); if (b){ b.classList.remove("live"); b.innerHTML = `${ic("mic")}سمّع بصوتك`; } }
+function startVoice(p){
+  if (!SRec) return;
+  stopVoice();
+  const exp = testOrder.map(k=>{ const [a,i] = k.split(":").map(Number); return {k, a, i, t: qn(wtext(V[a-1].w[i]))}; });
+  const st = {on:true, pos: Math.max(0, exp.findIndex(e=>!revealed.has(e.k))), seen:0, ok:0, miss:0};
+  const reveal = (e, cls)=>{ revealed.add(e.k); const el = document.querySelector(`.w[data-a="${e.a}"][data-i="${e.i}"]`); if (el){ el.classList.remove("hid"); el.classList.add(cls); el.scrollIntoView({block:"nearest"}); } };
+  const feed = words=>{
+    for (const w of words){
+      const t = qn(w); if (!t) continue;
+      for (let j=0; j<3 && st.pos+j<exp.length; j++){
+        if (simW(t, exp[st.pos+j].t) >= 0.6){
+          for (let m=0; m<j; m++){ reveal(exp[st.pos+m], "miss"); st.miss++; hintCount++; }
+          reveal(exp[st.pos+j], "said"); st.ok++; st.pos += j+1; break;
+        }
+      }
+    }
+    const ti = $("#testInfo"); if (ti) ti.textContent = `بصوتك: ${AR(st.ok)} صحيحة · ${AR(st.miss)} فاتتك · بقي ${AR(Math.max(0, exp.length-st.pos))}`;
+    if (st.pos >= exp.length){ stopVoice(); checkTestDone(); toast(st.miss ? `انتهى التسميع، فاتتك ${AR(st.miss)} كلمة (ظاهرة بالأحمر)` : "تسميع كامل بلا خطأ، بارك الله فيك"); }
+  };
+  const rec = new SRec(); rec.lang = "ar-SA"; rec.continuous = true; rec.interimResults = false;
+  rec.onresult = ev=>{ for (let r=ev.resultIndex; r<ev.results.length; r++) if (ev.results[r].isFinal) feed(ev.results[r][0].transcript.split(/\s+/)); };
+  rec.onerror = ev=>{ if (ev.error==="not-allowed" || ev.error==="service-not-allowed"){ toast("اسمح للبرنامج باستعمال الميكروفون ثم أعد المحاولة"); stopVoice(); } };
+  rec.onend = ()=>{ if (VOICE && VOICE.on){ try { rec.start(); } catch(e){ stopVoice(); } } };
+  VOICE = {rec, on:true};
+  try { rec.start(); } catch(e){ toast("تعذّر تشغيل التعرف على الصوت في هذا المتصفح"); VOICE = null; return; }
+  const b = $("#voiceBtn"); if (b){ b.classList.add("live"); b.innerHTML = `${ic("x")}أوقف الاستماع`; }
+  toast("ابدأ القراءة من حفظك، والبرنامج يتابعك");
+}
+
+/* ----- tafsir: Al-Mukhtasar fi Tafsir al-Quran (Tafsir Center for Quranic Studies), one file per surah ----- */
+const TAF = {};
+async function tafsirOf(s, a){
+  if (!TAF[s]) TAF[s] = fetch(`tafsir/${pad3(s)}.json`).then(r=>{ if (!r.ok) throw 0; return r.json(); }).catch(e=>{ delete TAF[s]; throw e; });
+  return (await TAF[s])[a-1];
+}
+
+/* verse tools: same as before, with in-app tafsir and weak marking */
+function renderTools(){
+  const box = $("#vtools"); if (!box) return;
+  if (!selAyah){ box.innerHTML = `<p class="small muted">اضغط رقم أي آية لتسمعها وتعدّ مرات تكرارها وتقرأ تفسيرها، واضغط أي كلمة ملوّنة لتعرف حكمها.</p>`; return; }
+  const a = selAyah, n = S.rep[a]||0, tg = S.prefs.target, wk = isWeak(a);
+  const muts = (DATA.mut[a]||[]).map(m=>m[0]);
+  box.innerHTML = `<div class="verse-tools">
+    <div class="spread"><b>الآية ${a} <span class="small muted">· صفحة ${V[a-1].p}</span></b><button class="btn icon ghost" id="closeTools" aria-label="إغلاق">${ic("x")}</button></div>
+    <div class="row">
+      <button class="btn primary" id="playAyah">${ic("play")}استمع للآية</button>
+      <button class="btn" id="playFrom">${ic("headphones")}من هنا إلى آخر الورد</button>
+      <button class="btn" id="tafBtn">${ic("book")}التفسير</button>
+      <button class="btn ${wk?"weakon":""}" id="weakBtn">${wk?"آية ضعيفة ✓":"علّمها ضعيفة"}</button>
+    </div>
+    <div id="tafBox"></div>
+    <div class="counter"><span class="small">التكرار</span><button class="btn icon" id="repMinus" aria-label="إنقاص">−</button><span class="big">${n}/${tg}</span><button class="btn primary" id="repPlus">${ic("repeat")}قرأتها +١</button>
+      <div class="bar rep-bar"><i style="width:${Math.min(100,n/tg*100)}%"></i></div></div>
+    ${n>=tg?`<p class="small" style="color:var(--good)">أحسنت، أتممت تكرار هذه الآية. انتقل إلى التي بعدها واربطهما.</p>`:n>=tg/2?`<p class="small muted">النصف الثاني: أغمض عينيك أو استعمل وضع «تسميع».</p>`:`<p class="small muted">اقرأها نظراً بتأنٍّ مع مراعاة الأحكام الملوّنة.</p>`}
+    ${muts.length?`<p class="small">⚠ لهذه الآية متشابه في السورة: الآية ${muts.join("، ")}</p>`:""}
+    <div id="ruleinfo"></div>
+  </div>`;
+  $("#closeTools").onclick = ()=>{ selAyah=null; document.querySelectorAll(".v.sel").forEach(e=>e.classList.remove("sel")); renderTools(); };
+  $("#repPlus").onclick = ()=>{ S.rep[a]=(S.rep[a]||0)+1; logAdd("reps",1); save(); renderTools(); };
+  $("#repMinus").onclick = ()=>{ S.rep[a]=Math.max(0,(S.rep[a]||0)-1); save(); renderTools(); };
+  $("#playAyah").onclick = ()=>play([a]);
+  $("#playFrom").onclick = ()=>{ const vs = PLAN[viewDay-1].verses; const k = vs.indexOf(a); play(k>=0 ? vs.slice(k) : [a]); };
+  $("#weakBtn").onclick = ()=>{ toggleWeak(a); markWeakInMushaf(); renderTools(); toast(isWeak(a)?"ستعود إليك هذه الآية في المراجعة حتى تثبت":"أزلت علامة الضعف"); };
+  $("#tafBtn").onclick = async ()=>{
+    const tb = $("#tafBox"); if (tb.innerHTML){ tb.innerHTML = ""; return; }
+    tb.innerHTML = `<p class="small muted">جارٍ التحميل…</p>`;
+    try { const t = await tafsirOf(SUR, a); tb.innerHTML = `<div class="tafsir"><p>${esc(t)}</p><div class="small muted">المختصر في تفسير القرآن الكريم، مركز تفسير للدراسات القرآنية</div></div>`; }
+    catch(e){ tb.innerHTML = `<p class="small muted">تعذّر تحميل التفسير. تأكد من الاتصال بالإنترنت أول مرة، ثم يُحفظ في جهازك.</p>`; }
+  };
+}
+
+/* ----- page-by-page mushaf (swipe like a paper mushaf) ----- */
+function openPages(p){
+  const pages = [...new Set(p.verses.map(a=>V[a-1].p))];
+  const keepSel = selAyah; selAyah = null;
+  const ov = document.createElement("div"); ov.className = "pgv"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","المصحف صفحة صفحة");
+  ov.innerHTML = `<div class="pgv-h"><button class="btn icon ghost" id="pgX" aria-label="إغلاق">${ic("x")}</button><b id="pgL"></b><span class="small muted">اسحب للصفحة التالية</span></div>
+    <div class="pgv-s">${pages.map(pg=>`<section class="pg" data-pg="${pg}"><div class="mushaf"><div class="mushaf-in"><div class="qtext ${mode==="plain"?"plain":""}" style="--qsize:${S.prefs.size}rem">${mushafHTML(p.verses.filter(a=>V[a-1].p===pg))}</div></div></div></section>`).join("")}</div>`;
+  selAyah = keepSel;
+  document.body.appendChild(ov); document.body.classList.add("sheet-open");
+  const sc = ov.querySelector(".pgv-s"), lab = ov.querySelector("#pgL");
+  const upd = ()=>{ const i = Math.round(Math.abs(sc.scrollLeft) / sc.clientWidth); lab.textContent = `صفحة ${AR(pages[Math.min(i,pages.length-1)])} · ${AR(Math.min(i,pages.length-1)+1)} من ${AR(pages.length)}`; };
+  sc.addEventListener("scroll", ()=>requestAnimationFrame(upd)); upd();
+  sc.onclick = e=>{ const w = e.target.closest(".w.hid"); if (w){ w.classList.remove("hid"); w.classList.add("peek"); } };
+  ov.querySelector("#pgX").onclick = ()=>{ ov.remove(); document.body.classList.remove("sheet-open"); };
+}
+
+/* ----- today screen: compact order, folded extras, new tools ----- */
+const FOLD_RX = /أحكام التجويد|انتبه للمتشابهات|محاسبة اليوم/;
+function enhanceToday2(){
+  const p = PLAN[viewDay-1]; if (!p) return;
+  const wrap = $("#view .wrap"); if (!wrap) return;
+  // late notice
+  const late = viewDay===currentDay() ? lateDays() : 0;
+  const head = $("#view .dayhead");
+  if (late && head) head.insertAdjacentHTML("afterend", `<p class="ptip small">فاتك ${daysAr(late)}، فلم يضِع شيء: ورد اليوم هو الذي توقفت عنده، والخطة تمتد تلقائياً.</p>`);
+  // review panels right after the mushaf, then long-term review
+  const panels = [...wrap.querySelectorAll(":scope > section.panel")];
+  const mush = panels.find(x=>x.querySelector(".mushaf")), rev = panels.find(x=>x.querySelector(".revlist") || /المراجعة المقررة|أوراد المراجعة/.test(x.textContent.slice(0,80)));
+  if (mush && rev) mush.after(rev);
+  const anchor = rev || mush;
+  if (anchor && (viewDay===currentDay() || S.done[viewDay]===todayStr())){ anchor.insertAdjacentHTML("afterend", farPanelHTML()); bindFar(); }
+  // fold extras; open state survives re-renders in this session
+  window.__fold = window.__fold || {};
+  for (const sec of wrap.querySelectorAll(":scope > section")){
+    const h = sec.querySelector("h2"); if (!h || !FOLD_RX.test(h.textContent)) continue;
+    const key = h.textContent.trim().slice(0,20);
+    sec.classList.add("fold"); if (window.__fold[key]) sec.classList.add("open");
+    let top = h; while (top.parentElement && top.parentElement !== sec) top = top.parentElement;
+    if (!sec.querySelector(":scope > .fold-b")){ const b = document.createElement("div"); b.className = "fold-b"; for (const c of [...sec.children]) if (c !== top) b.appendChild(c); sec.appendChild(b); }
+    const hd = top;
+    hd.classList.add("fold-h"); hd.setAttribute("role","button"); hd.setAttribute("tabindex","0"); hd.setAttribute("aria-expanded", String(!!window.__fold[key]));
+    hd.onclick = ()=>{ const o = sec.classList.toggle("open"); window.__fold[key] = o; hd.setAttribute("aria-expanded", String(o)); };
+    hd.onkeydown = e=>{ if (e.key==="Enter"||e.key===" "){ e.preventDefault(); hd.onclick(); } };
+  }
+  // drill, voice and page buttons in the mushaf toolbar
+  const tb = $("#view .toolbar");
+  if (tb){
+    tb.insertAdjacentHTML("beforeend", `<button class="btn" id="nwBtn">${ic("target")}الكلمة التالية</button><button class="btn" id="pgBtn">${ic("book")}صفحة صفحة</button>${mode==="test" && SRec?`<button class="btn gold" id="voiceBtn">${ic("mic")}سمّع بصوتك</button>`:""}`);
+    $("#nwBtn").onclick = ()=>nextWordDrill(p);
+    $("#pgBtn").onclick = ()=>openPages(p);
+    const vb = $("#voiceBtn"); if (vb) vb.onclick = ()=> VOICE ? stopVoice() : startVoice(p);
+  }
+  if (mode==="test" && SRec){ const nt = [...document.querySelectorAll("#view .note")].find(x=>x.textContent.includes("أظهر الكلمة التالية")); if (nt) nt.insertAdjacentHTML("beforeend", ` أو اضغط «سمّع بصوتك» واقرأ، فيكشف البرنامج الكلمات وأنت تقرأ ويظهر بالأحمر ما فاتك (تجريبي).`); }
+  // auto-promotion when the day is finished; a manual rating restarts the count
+  const db = $("#doneBtn");
+  if (db){ const orig = db.onclick; db.onclick = e=>{ if (!S.done[p.day]) promoteAfter(p); orig.call(db, e); }; }
+  document.querySelectorAll("[data-rate]").forEach(b=>b.addEventListener("click", ()=>{ delete RC()[b.dataset.rate]; save(); }));
+  // weak verses list
+  const wl = Object.keys(W()).map(k=>k.split(":").map(Number)).filter(([s])=>s===SUR).map(([,a])=>a).sort((x,y)=>x-y);
+  if (wl.length && rev) rev.insertAdjacentHTML("beforeend", `<div class="weaklist"><b class="small">آيات علّمتها ضعيفة:</b> ${wl.map(a=>`<button class="chip wchip" data-wgo="${a}">${AR(a)}</button>`).join("")}</div>`);
+  document.querySelectorAll("[data-wgo]").forEach(b=>b.onclick = ()=>{ const a = +b.dataset.wgo; const q = NEWS.find(q=>q.verses.includes(a)); if (!q) return; viewDay = q.day; resetModes(); render(); setTimeout(()=>{ selectAyah(a); const el = document.querySelector(`.v[data-v="${a}"]`); if (el) el.scrollIntoView({block:"center"}); }, 50); });
+  markWeakInMushaf();
+}
+const _appAfter0 = appAfterRender;
+appAfterRender = function(){ if (tab!=="today") stopVoice(); _appAfter0(); if (tab==="today") enhanceToday2(); };
+const _resetModes0 = resetModes;
+resetModes = function(){ stopVoice(); return _resetModes0.apply(this, arguments); };
+
+// long alert bodies collapse to three lines; tap to read all
+document.addEventListener("click", e=>{ const b = e.target.closest(".alertbox .al-b"); if (b) b.classList.toggle("full"); });
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

@@ -44,6 +44,21 @@ jobs:
           grep -E "error:|warning: .*AppDelegate" build.log | sort -u | head -40 || true
           tail -15 build.log
           test $ok -eq 1
+      - name: Unsigned IPA for free sideloading (Sideloadly / AltStore)
+        working-directory: app/ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath dd \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build > dev.log 2>&1 || { grep -E "error:" dev.log | sort -u | head -40; tail -15 dev.log; exit 1; }
+          rm -rf Payload && mkdir Payload
+          cp -R dd/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry Rafiq.ipa Payload
+          ls -lh Rafiq.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rafiq-ipa
+          path: app/ios/App/Rafiq.ipa
+          compression-level: 0
       - name: Archive and upload to TestFlight
         if: ${{ inputs.upload }}
         working-directory: app/ios/App

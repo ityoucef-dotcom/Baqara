@@ -2545,6 +2545,7 @@ async function exportICS(){
       if (info) info.textContent = `تم تجهيز ${n} موعداً. إن لم تظهر شاشة التقويم فافتح البرنامج في Safari وأعد المحاولة.`;
       location.href = "rafiq-calendar.ics?t="+Date.now(); return;
     }
+    if (!window.OFFLINE){ if (info) info.innerHTML = `صفحة المعاينة هذه لا تسمح بتنزيل الملفات. افتح <a href="https://ityoucef-dotcom.github.io/Baqara/" target="_blank" rel="noopener">نسخة الآيفون من البرنامج</a> واضغط الزر نفسه هناك.`; return; }
     const url = URL.createObjectURL(new Blob([txt], {type:"text/calendar;charset=utf-8"}));
     const a = document.createElement("a"); a.href = url; a.download = "rafiq-calendar.ics"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 60000);

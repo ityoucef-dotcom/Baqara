@@ -1,5 +1,5 @@
 /* offline cache for the Baqarah companion: app shell precached, recitations cached on demand or by "download all" */
-const SHELL = "shell-47acc2ab", AUDIO = "audio-v1";
+const SHELL = "shell-b42c2816", AUDIO = "audio-v1";
 const SHELL_FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "adhan/madinah.mp3"];
 
 self.addEventListener("install", e => {
@@ -27,6 +27,7 @@ self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
   const remote = url.hostname === "raw.githubusercontent.com" && /\/Husary_Mujawwad_64kbps\/\d{6}\.mp3$/.test(url.pathname);
   if (req.method !== "GET" || (url.origin !== location.origin && !remote)) return;
+  if (/\.ics$/.test(url.pathname)){ e.respondWith(caches.match(url.origin + url.pathname).then(r => r || fetch(req))); return; }
   const isMedia = /\.mp3$/.test(url.pathname);
   if (isMedia){
     e.respondWith((async () => {

@@ -931,6 +931,12 @@ section.fold:not(.open){padding-block:14px}
 .alertbox .al-b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .alertbox .al-b.full{display:block}
 .alertbox .al-h b{font-family:var(--f-ui)}
+.w.wrong{color:var(--bad)!important;text-decoration:underline wavy var(--bad);text-underline-offset:.4em;background:color-mix(in oklab,var(--bad) 10%,transparent);border-radius:4px}
+.w.wrong *{color:var(--bad)!important}
+.heard{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--sunk);font-family:var(--f-q,"Amiri Quran",serif);font-size:1.25rem;line-height:2;min-height:3em}
+.hw.ok{color:var(--good)}
+.hw.bad{color:var(--bad);text-decoration:underline wavy var(--bad);text-underline-offset:.35em}
+.hw.x{color:var(--muted)}
 </style>
 
 <div class="wrap">
@@ -3107,7 +3113,9 @@ function openRecite(u){
 }
 
 /* ----- next-word drill ----- */
-function qn(s){ return s.replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ\u200B-\u200F]/g,"").replace(/[أإآٱٲٳ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/\s+/g,""); }
+function qn(s){ return s.replace(/\u06E7/g,"ي").replace(/وٰ/g,"ا").replace(/ىٰ/g,"ى").replace(/ٰ/g,"ا").replace(/[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED\u0640\u200B-\u200F]/g,"").replace(/[أإآٱٲٳ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/\s+/g,""); }
+// spelling-insensitive key: Uthmani and everyday spelling differ mostly in alifs and hamza seats
+function wk(s){ return qn(s).replace(/[اء]/g,""); }
 function nextWordDrill(p){
   const words = p.verses.flatMap(a=>V[a-1].w.map((w,i)=>({a,i,t:wtext(w)})).filter((x,i)=>!isMark(V[x.a-1].w[x.i])));
   if (words.length < 8){ toast("الورد قصير جداً لهذا التمرين"); return; }
@@ -3158,34 +3166,65 @@ let VOICE = null;
 function lev(a, b){ const m = a.length, n = b.length; if (!m || !n) return m||n; let prev = Array.from({length:n+1},(_,j)=>j);
   for (let i=1;i<=m;i++){ const cur = [i]; for (let j=1;j<=n;j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev = cur; } return prev[n]; }
 const simW = (a, b) => { if (!a || !b) return 0; if (a===b) return 1; if (a.length<=2 || b.length<=2) return 0; return 1 - lev(a,b)/Math.max(a.length,b.length); };
-function stopVoice(){ if (!VOICE) return; VOICE.on = false; try { VOICE.rec.stop(); } catch(e){} VOICE = null; const b = $("#voiceBtn"); if (b){ b.classList.remove("live"); b.innerHTML = `${ic("mic")}سمّع بصوتك`; } }
+function stopVoice(){ if (!VOICE) return; VOICE.on = false; clearTimeout(VOICE.timer); try { VOICE.rec.abort ? VOICE.rec.abort() : VOICE.rec.stop(); } catch(e){} VOICE = null; const b = $("#voiceBtn"); if (b){ b.classList.remove("live"); b.innerHTML = `${ic("mic")}سمّع بصوتك`; } }
 function startVoice(p){
   if (!SRec) return;
   stopVoice();
-  const exp = testOrder.map(k=>{ const [a,i] = k.split(":").map(Number); return {k, a, i, t: qn(wtext(V[a-1].w[i]))}; });
-  const st = {on:true, pos: Math.max(0, exp.findIndex(e=>!revealed.has(e.k))), seen:0, ok:0, miss:0};
-  const reveal = (e, cls)=>{ revealed.add(e.k); const el = document.querySelector(`.w[data-a="${e.a}"][data-i="${e.i}"]`); if (el){ el.classList.remove("hid"); el.classList.add(cls); el.scrollIntoView({block:"nearest"}); } };
-  const feed = words=>{
-    for (const w of words){
-      const t = qn(w); if (!t) continue;
-      for (let j=0; j<3 && st.pos+j<exp.length; j++){
-        if (simW(t, exp[st.pos+j].t) >= 0.6){
-          for (let m=0; m<j; m++){ reveal(exp[st.pos+m], "miss"); st.miss++; hintCount++; }
-          reveal(exp[st.pos+j], "said"); st.ok++; st.pos += j+1; break;
-        }
+  try { PL.el.pause(); } catch(e){}
+  const exp = testOrder.map(k=>{ const [a,i] = k.split(":").map(Number); const tx = wtext(V[a-1].w[i]); return {k, a, i, t: qn(tx), k2: wk(tx)}; });
+  const st = {pos: Math.max(0, exp.findIndex(e=>!revealed.has(e.k))), ok:0, bad:0, heard:[]};
+  // live strip of what the phone heard: green = matched, red = wrong, grey = not counted
+  const tb = $("#view .toolbar");
+  let hb = $("#heard"); if (!hb && tb){ tb.insertAdjacentHTML("afterend", `<div class="heard" id="heard" aria-live="polite"><span class="muted small">يستمع… ابدأ القراءة</span></div>`); hb = $("#heard"); }
+  const showHeard = ()=>{ if (hb) hb.innerHTML = st.heard.slice(-14).map(h=>`<span class="hw ${h.c}">${esc(h.w)}</span>`).join(" ") || `<span class="muted small">يستمع… ابدأ القراءة</span>`; };
+  const mark = (e, cls)=>{ revealed.add(e.k); const el = document.querySelector(`.w[data-a="${e.a}"][data-i="${e.i}"]`); if (el){ el.classList.remove("hid","said","miss","wrong"); el.classList.add(cls); el.scrollIntoView({block:"nearest"}); } };
+  const info = ()=>{ const ti = $("#testInfo"); if (ti) ti.textContent = `بصوتك: ${AR(st.ok)} صحيحة · ${AR(st.bad)} خطأ · بقي ${AR(Math.max(0, exp.length-st.pos))}`; };
+  let pend = "";
+  const feedWord = w0=>{
+    const w = pend ? pend + w0 : w0; pend = "";
+    const t = qn(w); if (!t || st.pos >= exp.length) return;
+    // "يا أيها" is one word in the mushaf: hold a short piece that starts the expected word
+    const k = wk(w), ek = exp[st.pos].k2;
+    if (k && k !== ek && ek.startsWith(k) && k.length < ek.length){ pend = w; return; }
+    for (let j=0; j<3 && st.pos+j<exp.length; j++){
+      if (wk(w) === exp[st.pos+j].k2){
+        for (let m=0; m<j; m++){ mark(exp[st.pos+m], "miss"); st.bad++; hintCount++; }   // skipped words
+        mark(exp[st.pos+j], "said"); st.ok++; st.pos += j+1; st.heard.push({w, c:"ok"}); return;
       }
     }
-    const ti = $("#testInfo"); if (ti) ti.textContent = `بصوتك: ${AR(st.ok)} صحيحة · ${AR(st.miss)} فاتتك · بقي ${AR(Math.max(0, exp.length-st.pos))}`;
-    if (st.pos >= exp.length){ stopVoice(); checkTestDone(); toast(st.miss ? `انتهى التسميع، فاتتك ${AR(st.miss)} كلمة (ظاهرة بالأحمر)` : "تسميع كامل بلا خطأ، بارك الله فيك"); }
+    // close to the expected word but not right: a mistake in that word
+    if (simW(t, exp[st.pos].t) >= 0.34 || (t.length<=2 && exp[st.pos].t.length<=3)){ mark(exp[st.pos], "wrong"); st.bad++; hintCount++; st.pos++; st.heard.push({w, c:"bad"}); return; }
+    st.heard.push({w, c:"x"});
   };
-  const rec = new SRec(); rec.lang = "ar-SA"; rec.continuous = true; rec.interimResults = false;
-  rec.onresult = ev=>{ for (let r=ev.resultIndex; r<ev.results.length; r++) if (ev.results[r].isFinal) feed(ev.results[r][0].transcript.split(/\s+/)); };
-  rec.onerror = ev=>{ if (ev.error==="not-allowed" || ev.error==="service-not-allowed"){ toast("اسمح للبرنامج باستعمال الميكروفون ثم أعد المحاولة"); stopVoice(); } };
-  rec.onend = ()=>{ if (VOICE && VOICE.on){ try { rec.start(); } catch(e){ stopVoice(); } } };
-  VOICE = {rec, on:true};
-  try { rec.start(); } catch(e){ toast("تعذّر تشغيل التعرف على الصوت في هذا المتصفح"); VOICE = null; return; }
+  // results arrive word by word (interim); count each word once, and hold back the last interim word in case it changes
+  const used = [];
+  const rec = new SRec(); rec.lang = "ar-SA"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec.onresult = ev=>{
+    VOICE && (VOICE.fails = 0);
+    for (let r=ev.resultIndex; r<ev.results.length; r++){
+      const res = ev.results[r], words = res[0].transcript.trim().split(/\s+/).filter(Boolean);
+      const upto = res.isFinal ? words.length : Math.max(0, words.length-1);
+      for (let k=(used[r]||0); k<upto; k++) feedWord(words[k]);
+      used[r] = Math.max(used[r]||0, upto);
+    }
+    showHeard(); info();
+    if (st.pos >= exp.length){ stopVoice(); checkTestDone(); toast(st.bad ? `انتهى التسميع: ${AR(st.bad)} كلمة بالأحمر راجعها` : "تسميع كامل بلا خطأ، بارك الله فيك"); }
+  };
+  rec.onerror = ev=>{
+    if (ev.error==="not-allowed" || ev.error==="service-not-allowed"){ toast("اسمح للبرنامج باستعمال الميكروفون والتعرف على الكلام من الإعدادات ثم أعد المحاولة"); stopVoice(); }
+    else if (ev.error==="network"){ toast("التعرف على الكلام يحتاج اتصالاً بالإنترنت"); stopVoice(); }
+  };
+  // the phone ends listening after a pause; start again calmly, and give up if it keeps failing
+  rec.onend = ()=>{
+    if (!VOICE || !VOICE.on) return;
+    VOICE.fails = (VOICE.fails||0) + 1; used.length = 0;
+    if (VOICE.fails > 4){ stopVoice(); toast("توقف الاستماع. اضغط «سمّع بصوتك» لتكمل من حيث وصلت"); return; }
+    VOICE.timer = setTimeout(()=>{ if (VOICE && VOICE.on){ try { rec.start(); } catch(e){ stopVoice(); } } }, 400);
+  };
+  VOICE = {rec, on:true, fails:0, timer:null};
+  try { rec.start(); } catch(e){ toast("تعذّر تشغيل التعرف على الصوت هنا"); VOICE = null; return; }
   const b = $("#voiceBtn"); if (b){ b.classList.add("live"); b.innerHTML = `${ic("x")}أوقف الاستماع`; }
-  toast("ابدأ القراءة من حفظك، والبرنامج يتابعك");
+  showHeard(); info();
 }
 
 /* ----- tafsir: Al-Mukhtasar fi Tafsir al-Quran (Tafsir Center for Quranic Studies), one file per surah ----- */

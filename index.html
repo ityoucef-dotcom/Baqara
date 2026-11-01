@@ -937,6 +937,9 @@ section.fold:not(.open){padding-block:14px}
 .hw.ok{color:var(--good)}
 .hw.bad{color:var(--bad);text-decoration:underline wavy var(--bad);text-underline-offset:.35em}
 .hw.x{color:var(--muted)}
+.webv iframe{flex:1;width:100%;border:0;background:#fff}
+.webv .pgv-h a.btn{white-space:nowrap}
+.wv-tip{position:absolute;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--raised);padding:8px 12px;border-radius:10px;box-shadow:var(--shadow);margin:0}
 </style>
 
 <div class="wrap">
@@ -3339,6 +3342,26 @@ resetModes = function(){ stopVoice(); return _resetModes0.apply(this, arguments)
 
 // long alert bodies collapse to three lines; tap to read all
 document.addEventListener("click", e=>{ const b = e.target.closest(".alertbox .al-b"); if (b) b.classList.toggle("full"); });
+
+/* ----- lessons of Sheikh Amgad Samir: his own site, shown inside the app ----- */
+const AMGAD = "https://www.amgadsamir.com/";
+function openAmgad(){
+  const ov = document.createElement("div"); ov.className = "pgv webv"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","دروس الشيخ أمجد سمير");
+  ov.innerHTML = `<div class="pgv-h"><button class="btn icon ghost" id="wvX" aria-label="إغلاق">${ic("x")}</button><b>دروس الشيخ أمجد سمير</b><a class="btn" href="${AMGAD}" target="_blank" rel="noopener">افتح في المتصفح ↗</a></div>
+    <iframe src="${AMGAD}" title="موقع الشيخ أمجد سمير" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <p class="small muted wv-tip">إن بقيت الصفحة فارغة، فالموقع لا يسمح بعرضه داخل تطبيق آخر: اضغط «افتح في المتصفح».</p>`;
+  document.body.appendChild(ov); document.body.classList.add("sheet-open");
+  const fr = ov.querySelector("iframe");
+  fr.addEventListener("load", ()=>{ const t = ov.querySelector(".wv-tip"); if (t) setTimeout(()=>t.remove(), 4000); });
+  ov.querySelector("#wvX").onclick = ()=>{ ov.remove(); document.body.classList.remove("sheet-open"); };
+}
+function amgadCardHTML(){
+  return `<section class="panel amgad"><div class="ph"><span class="badge gold">${ic("play")}</span><h2>دروس الشيخ أمجد سمير</h2></div>
+    <p class="small muted">محاضرات الشيخ ودروسه المرئية من موقعه الرسمي، تفتح هنا داخل البرنامج.</p>
+    <div class="row"><button class="btn primary" id="amgadOpen">${ic("play")}افتح الدروس والمحاضرات</button></div></section>`;
+}
+const _appAfter1 = appAfterRender;
+appAfterRender = function(){ _appAfter1(); if (tab==="sermons"){ const w = $("#view .wrap"); if (w && !$("#amgadOpen")){ w.insertAdjacentHTML("afterbegin", amgadCardHTML()); $("#amgadOpen").onclick = openAmgad; } } };
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

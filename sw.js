@@ -1,5 +1,5 @@
 /* offline cache for the Baqarah companion: app shell precached, recitations cached on demand or by "download all" */
-const SHELL = "shell-bc79433d", AUDIO = "audio-v1";
+const SHELL = "shell-36fdc70d", AUDIO = "audio-v1";
 const SHELL_FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "adhan/madinah.mp3"];
 
 self.addEventListener("install", e => {

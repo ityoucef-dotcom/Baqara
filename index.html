@@ -975,6 +975,67 @@ section.fold:not(.open){padding-block:14px}
 .mdi svg{width:14px;height:14px}
 .mdf{display:flex;align-items:center;gap:6px;margin:10px 0 0;color:var(--gold)}
 .mdf svg{width:16px;height:16px}
+/* home dashboard */
+.home .hsec{font-size:1.15rem;margin:4px 2px -6px}
+.hduo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hcard,.hpray,.hmemo,.htile{font:inherit;color:var(--ink);text-align:start;cursor:pointer;border:1px solid var(--line);background:var(--raised);border-radius:22px;box-shadow:var(--shadow)}
+.hcard{display:grid;justify-items:center;text-align:center;gap:6px;padding:18px 12px 16px;min-height:190px;align-content:center}
+.hcard b{font-size:1.35rem;font-family:var(--f-ui)}
+.hcard .hs{font-size:.88rem;color:var(--gold)}
+.hadk{background:linear-gradient(160deg,color-mix(in oklab,var(--accent) 10%,var(--raised)),var(--raised))}
+.hadk .hs{color:var(--accent)}
+.hbig{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 18px color-mix(in oklab,var(--accent) 35%,transparent)}
+.hbig svg{width:30px;height:30px}
+.hcard.ok .hbig{background:var(--good)}
+.hbar{width:70%;height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.hbar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.hring,.khring{position:relative;width:78px;height:78px;display:grid;place-items:center}
+.kring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.kring circle{fill:none;stroke-width:6}
+.kring .rb{stroke:var(--sunk)}
+.kring .rf{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .5s}
+.rl{position:relative;font-size:1rem}
+.hpray{display:grid;gap:12px;padding:16px}
+.hp-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.hpn{display:block;font-size:1.5rem;color:var(--gold);font-family:var(--f-ui)}
+.hp-cd{text-align:end}.hp-cd b{display:block;font-size:1.5rem;color:var(--gold)}
+.hpts{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.hpt{display:grid;justify-items:center;gap:2px;padding:8px 2px;border-radius:12px;font-size:.78rem}
+.hpt b{font-size:.95rem}
+.hpt.next{background:color-mix(in oklab,var(--gold) 16%,var(--sunk));color:var(--gold)}
+.hp-f{display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.hp-f span{display:inline-flex;align-items:center;gap:4px}.hp-f svg{width:14px;height:14px;color:var(--good)}
+.hmemo{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.hmemo div{flex:1;display:grid;gap:2px}.hmemo small{color:var(--muted)}
+.hmc{color:var(--muted)}.hmc svg{width:20px;height:20px}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.htile{display:grid;gap:6px;align-content:start;padding:14px;min-height:122px}
+.hti{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:oklch(0.52 0.11 var(--hue));flex:none}
+.hti svg{width:22px;height:22px}
+.htile b{font-size:1.02rem}
+.htile small{color:var(--muted);font-size:.78rem;margin-top:auto}
+.hnum{font-size:1.25rem;color:oklch(0.5 0.1 var(--hue))}
+.hval{font-size:.92rem;color:oklch(0.5 0.1 var(--hue))}
+:root[data-theme="dark"] .hnum,:root[data-theme="dark"] .hval{color:oklch(0.78 0.1 var(--hue))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hnum,:root:not([data-theme="light"]) .hval{color:oklch(0.78 0.1 var(--hue))}}
+/* khatma */
+.khopts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.khopt{display:grid;justify-items:center;gap:2px;padding:14px 6px;border-radius:16px;border:1.5px solid var(--line);background:var(--raised);color:var(--ink);font:inherit;cursor:pointer}
+.khopt b{font-size:1.6rem;color:var(--gold)}.khopt small{color:var(--muted);font-size:.72rem;text-align:center}
+.khopt.rec{border-color:var(--gold)}
+.khhead{display:flex;gap:16px;align-items:center}
+.khhead h2{margin:2px 0 4px}
+.khrange{margin:0}
+.khlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:10px 0}
+.khd{display:grid;gap:1px;justify-items:center;padding:8px 4px;border-radius:12px;border:1.5px solid var(--line);background:var(--raised);color:var(--ink);font:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.khd span{font-size:.75rem;text-align:center}.khd small{color:var(--muted);font-size:.68rem}
+.khd.done{background:color-mix(in oklab,var(--good) 14%,var(--raised));border-color:color-mix(in oklab,var(--good) 50%,var(--line))}
+.khd.cur{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in oklab,var(--gold) 30%,transparent)}
+.btn.ok{border-color:var(--good);color:var(--good)}
+.khr .pgv-h{gap:8px}.khr .pgv-h b{font-size:.92rem}
+.pgno{text-align:center;color:var(--muted);margin-top:10px;font-size:.85rem}
+.khr .surah-band{margin:10px 0}
+.panel.khhead{display:flex;flex-direction:row;align-items:center}.khhead .khring{flex:none}
 </style>
 
 <div class="wrap">
@@ -3523,8 +3584,178 @@ renderPrayer = function(){ _rp0(); const first = $("#view .wrap > section.panel"
   if (first && !$("#plPanel")){ first.insertAdjacentHTML("afterend", prayLogHTML() + fastPanelHTML()); bindPrayLog(); bindFast(); } };
 const _appAfter2 = appAfterRender;
 appAfterRender = function(){ _appAfter2();
-  if (tab==="today" && !$("#myDay")){ const w = $("#view .wrap"); if (w){ w.insertAdjacentHTML("afterbegin", myDayHTML()); bindMyDay(); } } };
+  if (false && tab==="today" && !$("#myDay")){ const w = $("#view .wrap"); if (w){ w.insertAdjacentHTML("afterbegin", myDayHTML()); bindMyDay(); } } };
 window.__life = {fastWhy, dstr};
+/* ----- home dashboard + reading khatma ----- */
+Object.assign(ICONS, {
+  home:'<path d="M4 11l8-7 8 7v8.5a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19.5z"/>',
+  quran:'<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/>',
+  qibla:'<circle cx="12" cy="12" r="8.5"/><path d="M12 6l2.5 7.5L12 12l-2.5 1.5z"/>'
+});
+
+/* pages of the Madani mushaf, built from the verse data */
+const PAGES = (()=>{ const P = {}; for (let s=1; s<=114; s++){ const vs = QALL.surahs[s].verses; vs.forEach((v,i)=>{ (P[v.p] = P[v.p] || []).push([s, i+1]); }); } return P; })();
+const NPAGES = Math.max(...Object.keys(PAGES).map(Number));
+const KH_DAYS = [7,10,15,21,30,60];
+
+function KH(){ return S.kh || null; }
+function khPart(i, n){ const a = Math.floor((i-1)*NPAGES/n)+1, b = Math.floor(i*NPAGES/n); return {i, a, b}; }
+function khDoneN(){ const k = KH(); return k ? Object.keys(k.done||{}).length : 0; }
+function khFirstUndone(){ const k = KH(); let i = 1; while (i <= k.days && k.done[i]) i++; return i; }
+function khCalDay(){ const k = KH(); return Math.floor((noon(todayStr()) - noon(k.start)) / 864e5) + 1; }
+function khToday(){ const k = KH(); return Math.min(k.days, khFirstUndone()); }
+function khLate(){ const k = KH(); if (!k) return 0; return Math.max(0, Math.min(k.days, khCalDay()) - khFirstUndone()); }
+function pageFirst(pg){ const [s,a] = PAGES[pg][0]; return `${QALL.surahs[s].name} ${AR(a)}`; }
+function pageLast(pg){ const L = PAGES[pg]; const [s,a] = L[L.length-1]; return `${QALL.surahs[s].name} ${AR(a)}`; }
+function juzOf(pg){ const [s,a] = PAGES[pg][0]; return QALL.surahs[s].verses[a-1].j; }
+
+function ringSVG(frac, label){
+  const r = 34, c = 2*Math.PI*r;
+  return `<svg class="kring" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="${r}" class="rb"/><circle cx="40" cy="40" r="${r}" class="rf" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-Math.min(1,frac))).toFixed(1)}"/></svg><b class="rl num">${label}</b>`;
+}
+
+/* ----- home ----- */
+function renderHome(){
+  $("#pstrip").hidden = true;
+  const now = new Date(), t = dayTimes(now), n = nextPrayer(now);
+  const k = adhkarNow(), L = ADHKAR[k], st = ((S.ad||{})[todayStr()]||{})[k]||{}, aDone = L.filter((x,i)=>(st[i]||0)>=x.c).length;
+  const kh = KH(), kd = kh ? khDoneN() : 0;
+  const khSub = !kh ? "ابدأ ختمة" : kd>=kh.days ? "أتممت الختمة" : kh.done[khToday()]===todayStr() ? "أتممت ورد اليوم" : (()=>{ const p = khPart(khToday(), kh.days); return `ورد اليوم: ص ${AR(p.a)}–${AR(p.b)}`; })();
+  const pl = (S.pl||{})[todayStr()]||{}, fN = PRAYERS.filter(x=>pl[x]).length;
+  const h = hp(now), ram = (()=>{ for (let i=0;i<400;i++){ const d = new Date(+noon(todayStr())+i*864e5), x = hp(d); if (x && x.m===9 && x.d===1) return i; } return -1; })();
+  const nf = fastUpcoming()[0];
+  const rows = ["fajr","sunrise","dhuhr","asr","maghrib","isha"].map(x=>`<div class="hpt ${x===n.k?"next":""}"><span>${PNAMES[x]}</span><b class="num">${hm(t[x])}</b></div>`).join("");
+  const memo = PLAN[currentDay()-1], memDone = Object.values(S.done||{}).includes(todayStr());
+  const tile = (go, hue, icon, title, sub, extra)=>`<button class="htile" data-hgo="${go}" style="--hue:${hue}"><span class="hti">${ic(icon)}</span><b>${title}</b>${extra||""}<small>${sub}</small></button>`;
+  $("#view").innerHTML = `<div class="wrap home" style="gap:16px">
+    <h2 class="hsec">عبادات اليوم</h2>
+    <div class="hduo">
+      <button class="hcard hadk ${aDone===L.length?"ok":""}" data-hgo="adk">
+        <span class="hbig">${ic(k==="m"?"sun":"moon")}</span>
+        <b>الأذكار</b><span class="hs">${aDone===L.length?`أتممت أذكار ${k==="m"?"الصباح":"المساء"}`:`اقرأ أذكار ${k==="m"?"الصباح":"المساء"}`}</span>
+        <span class="hbar"><i style="width:${aDone/L.length*100}%"></i></span>
+      </button>
+      <button class="hcard hkh" data-hgo="khatma">
+        <span class="hring">${ringSVG(kh ? kd/kh.days : 0, kh ? `${AR(Math.round(kd/kh.days*100))}٪` : "–")}</span>
+        <b>الختمة</b><span class="hs">${khSub}</span>
+      </button>
+    </div>
+    <button class="hpray" data-hgo="prayer">
+      <div class="hp-top"><div><span class="small muted">الصلاة القادمة</span><b class="hpn">${PNAMES[n.k]} <span class="num">${hm(n.at)}</span></b></div>
+        <div class="hp-cd"><span class="small muted">بعد</span><b class="num" id="hmCd">${dur(n.at-now)}</b></div></div>
+      <div class="hpts">${rows}</div>
+      <div class="hp-f small"><span>${ic("check")} صلواتي اليوم <b class="num">${AR(fN)}/٥</b></span><span class="muted">${hijri(now)}</span></div>
+    </button>
+    <button class="hmemo" data-hgo="today"><span class="hti" style="--hue:155">${ic("book")}</span>
+      <div><b>حفظ سورة ${DATA.name}</b><small>${!S.start ? "لم تبدأ الخطة بعد، اضغط للبدء" : memo ? `اليوم ${AR(memo.day)} من ${AR(PLAN.length)}${memDone?" · أتممت ورد اليوم":""}` : "أتممت خطة السورة"}</small></div>
+      <span class="hmc">${ic(memDone?"check":"next")}</span></button>
+    <h2 class="hsec">استكشف</h2>
+    <div class="hgrid">
+      ${tile("tasbih", 95, "beads", "المسبحة", "تسبيحة اليوم", `<span class="hnum num">${AR(tbToday())}</span>`)}
+      ${tile("hijri", 215, "calendar", "التقويم الهجري", ram>0 ? `رمضان بعد ${AR(ram)} يوماً` : ram===0 ? "اليوم أول رمضان" : "", h?`<span class="hval">${AR(h.d)} ${HMONTHS[h.m-1]}</span>`:"")}
+      ${tile("fast", 30, "moon", "صيام التطوع", nf ? `${nf.i===0?"اليوم":nf.i===1?"غداً":"بعد "+AR(nf.i)+" أيام"}` : "", nf?`<span class="hval">${nf.r.map(x=>x.t).join("، ")}</span>`:"")}
+      ${tile("pl", 155, "mosque", "صلواتي", "الفرائض والسنن", `<span class="hnum num">${AR(fN)}/٥</span>`)}
+      ${tile("r", 265, "shield", "الرقية والتحصين", "من السحر والعين", "")}
+      ${tile("y", 200, "sun", "اليوم والليلة", "أذكار المواقف اليومية", "")}
+      ${tile("p", 175, "mosque", "أذكار الصلاة", "بعد السلام", "")}
+      ${tile("j", 340, "heart", "الأدعية", "من القرآن والسنة", "")}
+      ${tile("qibla", 45, "qibla", "القبلة", "اتجاه مكة من موقعك", "")}
+      ${tile("sermons", 10, "play", "دروس ومواعظ", "محاضرات ومقالات", "")}
+    </div>
+  </div>`;
+  $("#view").onclick = e=>{ const b = e.target.closest("[data-hgo]"); if (!b) return; buzz(); const g = b.dataset.hgo;
+    if (g==="adk"){ adkTab = k; setTab("adhkar"); }
+    else if (g==="tasbih"){ adkTab = "t"; setTab("adhkar"); }
+    else if (["r","y","p","j"].includes(g)){ adkTab = g; setTab("adhkar"); }
+    else if (g==="pl"||g==="fast"||g==="hijri"){ setTab("prayer"); setTimeout(()=>{ const x = $(g==="pl"?"#plPanel":"#fastPanel"); if (x) x.scrollIntoView({behavior:"smooth", block:"start"}); }, 60); }
+    else if (g==="qibla"){ setTab("prayer"); setTimeout(()=>{ const x = [...document.querySelectorAll("#view h2")].find(h=>/القبلة/.test(h.textContent)); if (x) x.closest("section").scrollIntoView({behavior:"smooth", block:"start"}); }, 60); }
+    else setTab(g); };
+}
+setInterval(()=>{ const c = $("#hmCd"); if (c && tab==="home"){ const now = new Date(), n = nextPrayer(now); c.textContent = dur(n.at-now); } }, 1000);
+
+/* ----- khatma ----- */
+function renderKhatma(){
+  const kh = KH();
+  if (!kh){
+    $("#view").innerHTML = `<div class="wrap" style="gap:16px"><section class="panel"><div class="ph"><span class="badge gold">${ic("quran")}</span><h2>ختمة القرآن الكريم</h2></div>
+      <p>اختر المدة التي تختم فيها القرآن، ويقسّم البرنامج صفحات المصحف (${AR(NPAGES)} صفحة) على الأيام بالتساوي، ويحفظ موضعك في القراءة.</p>
+      <div class="khopts">${KH_DAYS.map(d=>`<button class="khopt ${d===30?"rec":""}" data-khd="${d}"><b class="num">${AR(d)}</b><span>${d===30?"شهر":d===7?"أسبوع":d<=10?"أيام":"يوماً"}</span><small>نحو ${AR(Math.round(NPAGES/d))} صفحة في اليوم</small></button>`).join("")}</div>
+      <p class="small muted">قال عبد الله بن عمرو: قال لي النبي ﷺ: «اقرأ القرآن في شهر»، قلت: إني أجد قوة، حتى قال: «فاقرأه في سبع ولا تزد على ذلك». رواه البخاري (5054) ومسلم (1159).</p></section></div>`;
+    document.querySelectorAll("[data-khd]").forEach(b=>b.onclick=()=>{ S.kh = {days:+b.dataset.khd, start:todayStr(), done:{}, pg:1, n:(S.khN||0)}; save(); buzz(20); renderKhatma(); });
+    return;
+  }
+  const kd = khDoneN(), cur = khToday(), late = khLate(), fin = kd >= kh.days;
+  const p = khPart(cur, kh.days), doneToday = kh.done[cur]===todayStr();
+  const parts = Array.from({length:kh.days}, (_,i)=>khPart(i+1, kh.days));
+  $("#view").innerHTML = `<div class="wrap" style="gap:16px">
+    <section class="panel khhead"><div class="khring">${ringSVG(kd/kh.days, `${AR(kd)}/${AR(kh.days)}`)}</div>
+      <div><span class="small muted">ختمة في ${AR(kh.days)} ${kh.days<=10?"أيام":"يوماً"}${S.khN?` · الختمة رقم ${AR(S.khN+1)}`:""}</span>
+      <h2>${fin ? "أتممت الختمة، تقبّل الله منك" : `ورد اليوم ${AR(cur)}`}</h2>
+      ${fin ? "" : `<p class="khrange">من <b>${pageFirst(p.a)}</b> إلى <b>${pageLast(p.b)}</b></p><p class="small muted">الصفحات ${AR(p.a)}–${AR(p.b)} · الجزء ${AR(juzOf(p.a))}${juzOf(p.b)!==juzOf(p.a)?"–"+AR(juzOf(p.b)):""}</p>`}
+      ${late ? `<p class="ptip small">تأخرت ${AR(late)} ${late===1?"يوم":late<=10?"أيام":"يوماً"} عن الخطة، فاقرأ وردين اليوم إن استطعت لتلحق.</p>`:""}</div></section>
+    ${fin ? `<section class="panel"><p>«خيركم من تعلّم القرآن وعلّمه». رواه البخاري (5027) عن عثمان رضي الله عنه.</p><div class="row"><button class="btn primary" id="khAgain">${ic("reset")}ابدأ ختمة جديدة</button></div></section>` : `
+    <div class="row"><button class="btn primary" id="khRead">${ic("book")}${kh.pg>p.a && kh.pg<=p.b ? `تابع من صفحة ${AR(kh.pg)}` : "اقرأ ورد اليوم"}</button>
+      <button class="btn ${doneToday?"ok":""}" id="khDone">${ic("check")}${doneToday?"تم ورد اليوم":"أتممت ورد اليوم"}</button></div>`}
+    <section class="panel"><div class="ph"><span class="badge">${ic("list")}</span><h2>أوراد الختمة</h2></div>
+      <div class="khlist">${parts.map(x=>`<button class="khd ${kh.done[x.i]?"done":""} ${x.i===cur&&!fin?"cur":""}" data-khp="${x.i}"><b class="num">${AR(x.i)}</b><span>${pageFirst(x.a)}</span><small class="num">ص ${AR(x.a)}–${AR(x.b)}</small></button>`).join("")}</div>
+      <p class="small muted">اضغط على أي ورد لتقرأه. وتعلّم الأوراد التي أتممتها، ويمكنك إلغاء العلامة بالضغط المطوّل عليها.</p></section>
+    <section class="panel"><div class="ph"><span class="badge">${ic("gear")}</span><h2>تغيير المدة</h2></div>
+      <div class="seg">${KH_DAYS.map(d=>`<button class="${kh.days===d?"on":""}" data-khc="${d}">${AR(d)}</button>`).join("")}</div>
+      <p class="small muted">عند تغيير المدة يُحسب ما قرأته بالصفحات وتكمل من حيث وصلت.</p>
+      <div class="row"><button class="btn ghost" id="khReset">${ic("x")}إلغاء الختمة</button></div></section>
+  </div>`;
+  const rd = $("#khRead"); if (rd) rd.onclick = ()=>openKhReader(cur, kh.pg>p.a && kh.pg<=p.b ? kh.pg : p.a);
+  const dn = $("#khDone"); if (dn) dn.onclick = ()=>khMark(cur);
+  const ag = $("#khAgain"); if (ag) ag.onclick = ()=>{ S.khN = (S.khN||0)+1; const d = kh.days; S.kh = {days:d, start:todayStr(), done:{}, pg:1}; save(); renderKhatma(); };
+  document.querySelectorAll("[data-khp]").forEach(b=>{ let tm;
+    b.onclick = ()=>{ const x = khPart(+b.dataset.khp, kh.days); openKhReader(x.i, x.a); };
+    b.oncontextmenu = e=>{ e.preventDefault(); const i = +b.dataset.khp; if (kh.done[i]) delete kh.done[i]; else kh.done[i] = todayStr(); save(); renderKhatma(); };
+    b.ontouchstart = ()=>{ tm = setTimeout(()=>{ b.oncontextmenu({preventDefault(){}}); tm = null; }, 650); };
+    b.ontouchend = b.ontouchmove = ()=>clearTimeout(tm); });
+  document.querySelectorAll("[data-khc]").forEach(b=>b.onclick=()=>{ const d = +b.dataset.khc; if (d===kh.days) return;
+    const readTo = Math.max(0, ...Object.keys(kh.done).map(i=>khPart(+i, kh.days).b));
+    const done = {}; let i = 1; while (i<=d && khPart(i,d).b <= readTo){ done[i] = todayStr(); i++; }
+    const start = new Date(noon(todayStr()) - (i-1)*864e5);
+    S.kh = {days:d, start:dstr(start), done, pg:kh.pg}; save(); renderKhatma(); });
+  $("#khReset").onclick = ()=>{ if (confirm("إلغاء الختمة الحالية وحذف تقدّمها؟")){ S.kh = null; save(); renderKhatma(); } };
+}
+function khMark(i){
+  const kh = KH(); if (kh.done[i]) delete kh.done[i]; else { kh.done[i] = todayStr(); logAdd("khatma",1); buzz([30,40,30]); }
+  save(); if (khDoneN() >= kh.days) toast("أتممت الختمة، تقبّل الله منك"); if (tab==="khatma") renderKhatma();
+}
+function pageHTML(pg){
+  let h = "";
+  for (const [s,a] of PAGES[pg]){
+    const sur = QALL.surahs[s], v = sur.verses[a-1];
+    if (a===1){ h += `<div class="surah-band">سورة ${sur.name}</div>`; if (s!==1 && s!==9) h += `<div class="basm">${QALL.basmala.map(w=>segs(w).map(([t,c])=>c>=0?`<span class="t${c}">${t}</span>`:t).join("")).join(" ")}</div>`; }
+    h += `<span class="v">${v.w.map(w=>isMark(w)?w:segs(w).map(([t,c])=>c>=0?`<span class="t${c}">${t}</span>`:t).join("")).join(" ")} <span class="am">${AR(a)}</span></span> `;
+  }
+  return h;
+}
+function openKhReader(part, startPg){
+  const kh = KH(), p = khPart(part, kh.days), pages = []; for (let g=p.a; g<=p.b; g++) pages.push(g);
+  const ov = document.createElement("div"); ov.className = "pgv khr"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","قراءة ورد الختمة");
+  ov.innerHTML = `<div class="pgv-h"><button class="btn icon ghost" id="khX" aria-label="إغلاق">${ic("x")}</button><b id="khL"></b><button class="btn" id="khOk">${ic("check")}${kh.done[part]?"تم":"أتممت الورد"}</button></div>
+    <div class="pgv-s">${pages.map(g=>`<section class="pg" data-pg="${g}"><div class="mushaf"><div class="mushaf-in"><div class="qtext" style="--qsize:${S.prefs.size}rem">${pageHTML(g)}</div><div class="pgno num">${AR(g)}</div></div></div></section>`).join("")}</div>`;
+  document.body.appendChild(ov); document.body.classList.add("sheet-open");
+  const sc = ov.querySelector(".pgv-s"), lab = ov.querySelector("#khL");
+  const idx = ()=>Math.min(pages.length-1, Math.round(Math.abs(sc.scrollLeft) / sc.clientWidth));
+  const upd = ()=>{ const i = idx(); lab.textContent = `صفحة ${AR(pages[i])} · ${AR(i+1)} من ${AR(pages.length)}`; if (kh.pg !== pages[i]){ kh.pg = pages[i]; save(); } };
+  const si = Math.max(0, pages.indexOf(startPg));
+  requestAnimationFrame(()=>{ const sec = sc.children[si]; if (sec) sec.scrollIntoView({inline:"start", block:"nearest"}); upd(); });
+  sc.addEventListener("scroll", ()=>requestAnimationFrame(upd));
+  const close = ()=>{ ov.remove(); document.body.classList.remove("sheet-open"); if (tab==="khatma"||tab==="home") render(); };
+  ov.querySelector("#khX").onclick = close;
+  ov.querySelector("#khOk").onclick = ()=>{ if (!kh.done[part]) khMark(part); close(); };
+}
+
+/* routing: new tabs reuse the fallback branch of render() */
+const _rm0 = renderMethod;
+renderMethod = function(){ if (tab==="home") return renderHome(); if (tab==="khatma") return renderKhatma(); _rm0(); };
+NAV_MAIN.splice(0, NAV_MAIN.length, ["home","الرئيسية","home"], ["today","الحفظ","book"], ["prayer","الصلاة","mosque"], ["adhkar","الأذكار","beads"]);
+NAV_MORE.unshift(["khatma","ختمة القرآن","quran"], ["surahs","اختر سورة للحفظ","list"]);
+TAB_TITLE.home = "رفيق المسلم"; TAB_TITLE.khatma = "ختمة القرآن";
+{ const h = (location.hash||"").slice(1); if (h==="home"||h==="khatma"||!h) tab = h || "home"; }
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

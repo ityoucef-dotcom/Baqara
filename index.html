@@ -1079,6 +1079,7 @@ section.fold:not(.open){padding-block:14px}
 .stby{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;margin:10px 0;border-radius:14px;background:color-mix(in oklab,var(--gold,#c9a54a) 14%,transparent);border:1px solid color-mix(in oklab,var(--gold,#c9a54a) 40%,transparent)}
 .stby.on{background:color-mix(in oklab,var(--accent,#0b6b50) 16%,transparent);border-color:color-mix(in oklab,var(--accent,#0b6b50) 45%,transparent)}
 .stby .small{margin-top:3px;line-height:1.6}.stby .btn{flex:none}
+.geo-steps{margin:.4rem 0 0;padding-inline-start:1.2rem;line-height:1.9}
 </style>
 
 <div class="wrap">
@@ -2320,6 +2321,8 @@ function renderPrayer(){
     </section>
     ${worshipPanelHTML()}
     <section class="panel"><div class="ph"><span class="badge">${ic("pin")}</span><h2>المدينة وطريقة الحساب</h2></div>
+      <div class="row"><button class="btn primary" id="cGeo">${ic("pin")}حدّد موقعي تلقائياً</button></div>
+      <div class="small muted" id="cInfo">${p.city && p.city.gps ? "المواقيت محسوبة على موقعك الذي حدّده الجهاز." : ""}</div>
       <div class="formgrid">
         <label>المدينة <select id="prCity">${cityOptions(customSel?"__custom":(p.city?p.city.name:""))}${p.city?"":`<option value="" selected>اختر مدينتك…</option>`}</select></label>
         <div class="custom" id="prCustom" ${customSel?"":"hidden"}>
@@ -2327,8 +2330,6 @@ function renderPrayer(){
           <label>خط العرض <input id="cLat" inputmode="decimal" value="${customSel?p.city.lat:""}" placeholder="36.75"></label>
           <label>خط الطول <input id="cLng" inputmode="decimal" value="${customSel?p.city.lng:""}" placeholder="3.06"></label>
           <button class="btn" id="cSave">${ic("check")}حفظ</button>
-          <button class="btn ghost" id="cGeo">${ic("pin")}حدّد موقعي</button>
-          <span class="small muted" id="cInfo"></span>
         </div>
         <label>طريقة الحساب <select id="prMethod">${Object.entries(METHODS).map(([k,m])=>`<option value="${k}" ${methodNow()===k?"selected":""}>${m.n}</option>`).join("")}</select></label>
         <label>حساب العصر <select id="prAsr"><option value="1" ${p.asr===1?"selected":""}>الجمهور (المالكي والشافعي والحنبلي)</option><option value="2" ${p.asr===2?"selected":""}>الحنفي</option></select></label>
@@ -2373,10 +2374,24 @@ function renderPrayer(){
     P.city = {name:($("#cName").value||"موقعي").trim().slice(0,40), lat, lng, custom:true}; save(); renderPrayer();
   };
   $("#cGeo").onclick = ()=>{
-    $("#cInfo").textContent = "جارٍ تحديد الموقع…";
-    try { navigator.geolocation.getCurrentPosition(pos=>{ $("#cLat").value = pos.coords.latitude.toFixed(4); $("#cLng").value = pos.coords.longitude.toFixed(4); if (!$("#cName").value) $("#cName").value = "موقعي"; $("#cInfo").textContent = "تم، اضغط «حفظ»"; },
-      ()=>{ $("#cInfo").textContent = "لم يسمح المتصفح بتحديد الموقع هنا. اختر أقرب مدينة أو أدخل الإحداثيات (تجدها في خرائط Google بالضغط المطوّل على مكانك)."; }, {timeout:10000}); }
-    catch(e){ $("#cInfo").textContent = "تحديد الموقع غير متاح هنا، أدخل الإحداثيات يدوياً."; }
+    const info = $("#cInfo"); info.textContent = "جارٍ تحديد الموقع… إذا ظهرت رسالة من الآيفون فاضغط «السماح»";
+    if (!navigator.geolocation){ info.textContent = "تحديد الموقع غير متاح هنا، اختر أقرب مدينة أو أدخل الإحداثيات."; return; }
+    const ok = pos=>{ const lat = +pos.coords.latitude.toFixed(4), lng = +pos.coords.longitude.toFixed(4);
+      let best = null; CITIES.forEach(([g,list,m])=>list.forEach(([n,a,o])=>{ const d = Math.hypot(a-lat, (o-lng)*Math.cos(lat*Math.PI/180))*111; if (!best || d < best.d) best = {n, d, m}; }));
+      const near = best && best.d < 40 ? best.n : best && best.d < 300 ? "قرب "+best.n : "موقعي";
+      if (best && best.d < 300 && best.m) P.method = best.m;
+      P.city = {name: near, lat, lng, custom:true, gps:true}; save(); renderPrayer();
+      const x = $("#cInfo"); if (x) x.textContent = `تم تحديد موقعك (${near}) وحُسبت المواقيت عليه.`; toast("تم تحديد موقعك"); };
+    const fail = (e, retried)=>{
+      if (e && e.code === 3 && !retried){ navigator.geolocation.getCurrentPosition(ok, er=>fail(er, true), {enableHighAccuracy:false, timeout:20000, maximumAge:600000}); return; }
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      info.innerHTML = e && e.code === 1
+        ? (ios ? `رفض الآيفون إعطاء الموقع. فعّله هكذا ثم أعد المحاولة:<ol class="geo-steps"><li>الإعدادات ← الخصوصية والأمان ← خدمات الموقع: شغّلها.</li><li>في القائمة نفسها انزل إلى «مواقع Safari» واختر «أثناء استخدام التطبيق».</li><li>الإعدادات ← تطبيقات ← Safari ← الموقع: اختر «اسأل» أو «السماح».</li><li>أغلق البرنامج من قائمة التطبيقات وافتحه، ثم اضغط «حدّد موقعي تلقائياً» واختر «السماح».</li></ol>` : "رفض المتصفح إعطاء الموقع. اسمح به من إعدادات الموقع في المتصفح (رمز القفل بجانب العنوان) ثم أعد المحاولة.")
+        : e && e.code === 2 ? "تعذّر معرفة الموقع الآن. تأكد أن خدمات الموقع مفعّلة وأنك متصل بالإنترنت، ثم أعد المحاولة."
+        : "انتهت المهلة قبل تحديد الموقع. أعد المحاولة في مكان مكشوف، أو اختر أقرب مدينة من القائمة.";
+    };
+    try { navigator.geolocation.getCurrentPosition(ok, e=>fail(e,false), {enableHighAccuracy:true, timeout:15000, maximumAge:300000}); }
+    catch(e){ info.textContent = "تحديد الموقع غير متاح هنا، أدخل الإحداثيات يدوياً."; }
   };
   $("#prMethod").onchange = e=>{ if (!P.city){ const c = cityNow(); P.city = {name:c.name, lat:c.lat, lng:c.lng}; } P.method = e.target.value; save(); renderPrayer(); };
   $("#prAsr").onchange = e=>{ P.asr = +e.target.value; save(); renderPrayer(); };

@@ -1076,6 +1076,9 @@ section.fold:not(.open){padding-block:14px}
 .hbm .hti{width:36px;height:36px}
 .wg-steps{margin:.4rem 0 .8rem;padding-inline-start:1.2rem;line-height:1.9}
 .wg-code{width:100%;min-height:45vh;direction:ltr;text-align:left;font:12px/1.4 ui-monospace,monospace;border-radius:12px;border:1px solid var(--line,#ccc);padding:.6rem;background:var(--card,#fff);color:inherit}
+.stby{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;margin:10px 0;border-radius:14px;background:color-mix(in oklab,var(--gold,#c9a54a) 14%,transparent);border:1px solid color-mix(in oklab,var(--gold,#c9a54a) 40%,transparent)}
+.stby.on{background:color-mix(in oklab,var(--accent,#0b6b50) 16%,transparent);border-color:color-mix(in oklab,var(--accent,#0b6b50) 45%,transparent)}
+.stby .small{margin-top:3px;line-height:1.6}.stby .btn{flex:none}
 </style>
 
 <div class="wrap">
@@ -2199,7 +2202,7 @@ function adhanFile(fajr){
 function warmAdhan(){ if (window.OFFLINE && navigator.onLine) [adhanFile(false), adhanFile(true)].forEach(f=>{ try { fetch(f).then(r=>r.arrayBuffer()).catch(()=>{}); } catch(e){} }); }
 const ADH = new Audio(); ADH.preload = "none"; let adhanUnlocked = false, userActed = false;
 function adhanSrc(fajr){ const f = adhanFile(fajr); if (!ADH.src || !ADH.src.endsWith(f)) ADH.src = f; }
-document.addEventListener("pointerdown", ()=>{ if (userActed) return; userActed = true; warmAdhan();
+document.addEventListener("pointerdown", ()=>{ if (userActed) return; userActed = true; warmAdhan(); if (PP().standby) return;
   // prime the adhan element during a real gesture so it may play later on its own
   try { adhanSrc(); ADH.muted = true; const p = ADH.play(); if (p && p.then) p.then(()=>{ ADH.pause(); ADH.currentTime = 0; ADH.muted = false; adhanUnlocked = true; }).catch(()=>{ ADH.muted = false; }); } catch(e){}
 }, {capture:true});
@@ -3957,6 +3960,39 @@ renderMethod = function(){ if (tab==="mushaf") return renderMushaf(); _rm1(); };
 NAV_MAIN.splice(1, 0, ["mushaf","المصحف","quran"]);
 TAB_TITLE.mushaf = "المصحف الشريف";
 { const h = (location.hash||"").slice(1); if (h==="mushaf") tab = h; }
+/* ----- adhan standby: keeps the page alive on iPhone (screen locked or another app open) by playing silence
+   through the adhan element itself, then swaps in the adhan at prayer time. Must be started by a tap. ----- */
+const SILENT = (()=>{ const sr = 8000, n = sr*20, b = new ArrayBuffer(44+n), v = new DataView(b), w = (o,s)=>{ for (let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  w(0,"RIFF"); v.setUint32(4,36+n,true); w(8,"WAVE"); w(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,"data"); v.setUint32(40,n,true);
+  for (let i=0;i<n;i++) v.setUint8(44+i,128);
+  return URL.createObjectURL(new Blob([b],{type:"audio/wav"})); })();
+const STBY = {on:false, silent:false, lastTick:0};
+function stbyMeta(){ if (!("mediaSession" in navigator)) return; const n = nextPrayer(new Date());
+  try { navigator.mediaSession.metadata = new MediaMetadata({title:`في انتظار أذان ${PNAMES[n.k]} · ${hm(n.at)}`, artist:"رفيق المسلم · وضع الأذان", album:cityNow().name, artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"}]}); } catch(e){} }
+function toSilence(){ STBY.silent = true; ADH.loop = true; ADH.src = SILENT; ADH.muted = false; ADH.volume = 1; const p = ADH.play(); stbyMeta(); return p && p.catch ? p.catch(()=>{ STBY.on = false; paintStandby(); }) : null; }
+function startStandby(){ STBY.on = true; P_save(true); toSilence(); paintStandby(); toast("وضع الأذان مفعّل: اترك البرنامج مفتوحاً، ويمكنك قفل الشاشة"); }
+function stopStandby(){ STBY.on = false; P_save(false); if (STBY.silent){ STBY.silent = false; ADH.loop = false; ADH.pause(); } paintStandby(); }
+function P_save(v){ PP().standby = v; save(); }
+const _playAdhan0 = playAdhan, _stopAdhan0 = stopAdhan;
+playAdhan = function(fajr){ STBY.silent = false; ADH.loop = false; _playAdhan0(fajr);
+  if ("mediaSession" in navigator) try { navigator.mediaSession.metadata = new MediaMetadata({title:"الأذان", artist:"رفيق المسلم", artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"}]}); } catch(e){} };
+stopAdhan = function(){ if (STBY.on){ if (!STBY.silent) toSilence(); } else _stopAdhan0(); };
+ADH.addEventListener("ended", ()=>{ if (STBY.on && !STBY.silent) toSilence(); });
+// while the silent track plays, timers can be throttled in the background, so let the audio clock drive the checks too
+ADH.addEventListener("timeupdate", ()=>{ if (!STBY.on) return; const t = Date.now(); if (t - STBY.lastTick > 5000){ STBY.lastTick = t; tick(); if (STBY.silent && t % 60000 < 5000) stbyMeta(); } });
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) tick(); });
+renderPrayerBtn = function(){ const b = $("#adhPrev"); if (b) b.innerHTML = (ADH.paused || STBY.silent) ? `${ic("volume")}استمع للأذان المختار` : `${ic("pause")}إيقاف الأذان`; const s = $("#adhStop"); if (s && STBY.silent) s.hidden = true; };
+// restart after the page is reopened: browsers need one tap first
+document.addEventListener("pointerdown", ()=>{ if (PP().standby && (!STBY.on || ADH.paused)){ STBY.on = true; if (ADH.paused) toSilence(); paintStandby(); } }, true);
+function standbyHTML(){ const on = STBY.on && !ADH.paused;
+  return `<div class="stby ${on?"on":""}" id="stbyBox"><div><b>${on?"وضع الأذان يعمل":"وضع الأذان متوقف"}</b>
+    <div class="small">${on?"سيُرفع الأذان في وقته ولو قفلت الشاشة أو فتحت تطبيقاً آخر، ما دام البرنامج لم يُغلق من قائمة التطبيقات.":"على الآيفون يتوقف البرنامج عن العمل إذا قُفلت الشاشة أو انتقلت إلى تطبيق آخر، فلا يُسمع الأذان. فعّل هذا الوضع ليبقى البرنامج يعمل."}</div></div>
+    <button class="btn ${on?"":"primary"}" id="stbyBtn">${on?"إيقاف":"فعّل وضع الأذان"}</button></div>`; }
+function paintStandby(){ const x = $("#stbyBox"); if (x){ x.outerHTML = standbyHTML(); bindStandby(); } }
+function bindStandby(){ const b = $("#stbyBtn"); if (b) b.onclick = ()=>{ if (STBY.on && !ADH.paused) stopStandby(); else startStandby(); }; }
+const _rpS = renderPrayer;
+renderPrayer = function(){ _rpS(); const r = $("#adhPrev"); if (r && !$("#stbyBox")){ r.closest(".row").insertAdjacentHTML("beforebegin", standbyHTML()); bindStandby(); } };
 /* ----- Friday section: intro (hour of answer, al-Kahf button, warning about weak practices) ----- */
 Object.assign(ICONS, {friday:'<path d="M12 2.5l2.6 3.2 4.1-.4-.4 4.1 3.2 2.6-3.2 2.6.4 4.1-4.1-.4L12 21.5l-2.6-3.2-4.1.4.4-4.1L2.5 12l3.2-2.6-.4-4.1 4.1.4z"/><circle cx="12" cy="12" r="3.2"/>'});
 function kahfPage(){ for (let p=1; p<=NPAGES; p++) if (PAGES[p] && PAGES[p].some(([s,a])=>s===18 && a===1)) return p; return 293; }

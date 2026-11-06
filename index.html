@@ -1067,6 +1067,13 @@ section.fold:not(.open){padding-block:14px}
 .mqr .v.sel{background:color-mix(in oklab,var(--accent) 14%,transparent)}
 .mqr .pgv-h b{flex:1}
 .sheet{z-index:80}
+/* stop-point bookmark */
+.v.bm{background:color-mix(in oklab,var(--gold) 20%,transparent);border-radius:6px;box-shadow:inset 0 -2px 0 var(--gold)}
+.v.bm .am{background:var(--gold);color:var(--raised)}
+.hbms{display:grid;gap:8px}
+.hbm{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:18px;border:1px solid color-mix(in oklab,var(--gold) 40%,var(--line));background:color-mix(in oklab,var(--gold) 8%,var(--raised));color:var(--ink);font:inherit;text-align:start;cursor:pointer}
+.hbm div{flex:1;display:grid}.hbm small{color:var(--gold);font-size:.75rem}
+.hbm .hti{width:36px;height:36px}
 </style>
 
 <div class="wrap">
@@ -3141,6 +3148,7 @@ function weakPortions(){
     const q = NEWS.find(q=>q.verses.includes(a)); if (q) out.add(q.n); }
   return [...out];
 }
+function paintHifzBm(){ document.querySelectorAll(".v.bm").forEach(e=>e.classList.remove("bm")); const b = S.bmk && S.bmk.hifz; if (b && b.s===SUR) document.querySelectorAll(`.v[data-v="${b.a}"]`).forEach(e=>e.classList.add("bm")); }
 function markWeakInMushaf(){
   document.querySelectorAll(".v.weakv").forEach(e=>e.classList.remove("weakv"));
   for (const k of Object.keys(W())){ const [s,a] = k.split(":").map(Number); if (s!==SUR) continue;
@@ -3379,6 +3387,7 @@ function renderTools(){
       <button class="btn" id="playFrom">${ic("headphones")}من هنا إلى آخر الورد</button>
       <button class="btn" id="tafBtn">${ic("book")}التفسير</button>
       <button class="btn ${wk?"weakon":""}" id="weakBtn">${wk?"آية ضعيفة ✓":"علّمها ضعيفة"}</button>
+      <button class="btn ${S.bmk&&S.bmk.hifz&&S.bmk.hifz.s===SUR&&S.bmk.hifz.a===a?"weakon":""}" id="bmBtn">${ic("star")}${S.bmk&&S.bmk.hifz&&S.bmk.hifz.s===SUR&&S.bmk.hifz.a===a?"علامة التوقف هنا ✓":"توقفت هنا"}</button>
     </div>
     <div id="tafBox"></div>
     <div class="counter"><span class="small">التكرار</span><button class="btn icon" id="repMinus" aria-label="إنقاص">−</button><span class="big">${n}/${tg}</span><button class="btn primary" id="repPlus">${ic("repeat")}قرأتها +١</button>
@@ -3392,6 +3401,7 @@ function renderTools(){
   $("#repMinus").onclick = ()=>{ S.rep[a]=Math.max(0,(S.rep[a]||0)-1); save(); renderTools(); };
   $("#playAyah").onclick = ()=>play([a]);
   $("#playFrom").onclick = ()=>{ const vs = PLAN[viewDay-1].verses; const k = vs.indexOf(a); play(k>=0 ? vs.slice(k) : [a]); };
+  $("#bmBtn").onclick = ()=>{ setBm("hifz", SUR, a); paintHifzBm(); renderTools(); };
   $("#weakBtn").onclick = ()=>{ toggleWeak(a); markWeakInMushaf(); renderTools(); toast(isWeak(a)?"ستعود إليك هذه الآية في المراجعة حتى تثبت":"أزلت علامة الضعف"); };
   $("#tafBtn").onclick = async ()=>{
     const tb = $("#tafBox"); if (tb.innerHTML){ tb.innerHTML = ""; return; }
@@ -3462,7 +3472,7 @@ function enhanceToday2(){
   const wl = Object.keys(W()).map(k=>k.split(":").map(Number)).filter(([s])=>s===SUR).map(([,a])=>a).sort((x,y)=>x-y);
   if (wl.length && rev) rev.insertAdjacentHTML("beforeend", `<div class="weaklist"><b class="small">آيات علّمتها ضعيفة:</b> ${wl.map(a=>`<button class="chip wchip" data-wgo="${a}">${AR(a)}</button>`).join("")}</div>`);
   document.querySelectorAll("[data-wgo]").forEach(b=>b.onclick = ()=>{ const a = +b.dataset.wgo; const q = NEWS.find(q=>q.verses.includes(a)); if (!q) return; viewDay = q.day; resetModes(); render(); setTimeout(()=>{ selectAyah(a); const el = document.querySelector(`.v[data-v="${a}"]`); if (el) el.scrollIntoView({block:"center"}); }, 50); });
-  markWeakInMushaf();
+  markWeakInMushaf(); paintHifzBm();
 }
 const _appAfter0 = appAfterRender;
 appAfterRender = function(){ if (tab!=="today") stopVoice(); _appAfter0(); if (tab==="today") enhanceToday2(); };
@@ -3671,6 +3681,8 @@ function renderHome(){
         <b>الختمة</b><span class="hs">${khSub}</span>
       </button>
     </div>
+    ${(()=>{ const L = Object.entries(BMK()).sort((x,y)=>y[1].at-x[1].at); if (!L.length) return "";
+      return `<div class="hbms">${L.map(([k,b])=>`<button class="hbm" data-hbm="${k}"><span class="hti" style="--hue:45">${ic("star")}</span><div><small>علامة ${BM_NAME[k]}</small><b>${bmLabel(b)}</b></div><span class="hmc">${ic("next")}</span></button>`).join("")}</div>`; })()}
     <button class="hpray" data-hgo="prayer">
       <div class="hp-top"><div><span class="small muted">الصلاة القادمة</span><b class="hpn">${PNAMES[n.k]} <span class="num">${hm(n.at)}</span></b></div>
         <div class="hp-cd"><span class="small muted">بعد</span><b class="num" id="hmCd">${dur(n.at-now)}</b></div></div>
@@ -3695,7 +3707,8 @@ function renderHome(){
       ${tile("sermons", 10, "play", "دروس ومواعظ", "محاضرات ومقالات", "")}
     </div>
   </div>`;
-  $("#view").onclick = e=>{ const b = e.target.closest("[data-hgo]"); if (!b) return; buzz(); const g = b.dataset.hgo;
+  $("#view").onclick = e=>{ const m = e.target.closest("[data-hbm]"); if (m){ goBm(m.dataset.hbm); return; }
+    const b = e.target.closest("[data-hgo]"); if (!b) return; buzz(); const g = b.dataset.hgo;
     if (g==="adk"){ adkTab = k; setTab("adhkar"); }
     else if (g==="tasbih"){ adkTab = "t"; setTab("adhkar"); }
     else if (["r","y","p","j"].includes(g)){ adkTab = g; setTab("adhkar"); }
@@ -3726,7 +3739,7 @@ function renderKhatma(){
       ${fin ? "" : `<p class="khrange">من <b>${pageFirst(p.a)}</b> إلى <b>${pageLast(p.b)}</b></p><p class="small muted">الصفحات ${AR(p.a)}–${AR(p.b)} · الجزء ${AR(juzOf(p.a))}${juzOf(p.b)!==juzOf(p.a)?"–"+AR(juzOf(p.b)):""}</p>`}
       ${late ? `<p class="ptip small">تأخرت ${AR(late)} ${late===1?"يوم":late<=10?"أيام":"يوماً"} عن الخطة، فاقرأ وردين اليوم إن استطعت لتلحق.</p>`:""}</div></section>
     ${fin ? `<section class="panel"><p>«خيركم من تعلّم القرآن وعلّمه». رواه البخاري (5027) عن عثمان رضي الله عنه.</p><div class="row"><button class="btn primary" id="khAgain">${ic("reset")}ابدأ ختمة جديدة</button></div></section>` : `
-    <div class="row"><button class="btn primary" id="khRead">${ic("book")}${kh.pg>p.a && kh.pg<=p.b ? `تابع من صفحة ${AR(kh.pg)}` : "اقرأ ورد اليوم"}</button>
+    <div class="row"><button class="btn primary" id="khRead">${ic("book")}${BMK().khatma && BMK().khatma.p>=p.a && BMK().khatma.p<=p.b ? `تابع من علامتك: ${bmLabel(BMK().khatma)}` : kh.pg>p.a && kh.pg<=p.b ? `تابع من صفحة ${AR(kh.pg)}` : "اقرأ ورد اليوم"}</button>
       <button class="btn ${doneToday?"ok":""}" id="khDone">${ic("check")}${doneToday?"تم ورد اليوم":"أتممت ورد اليوم"}</button></div>`}
     <section class="panel"><div class="ph"><span class="badge">${ic("list")}</span><h2>أوراد الختمة</h2></div>
       <div class="khlist">${parts.map(x=>`<button class="khd ${kh.done[x.i]?"done":""} ${x.i===cur&&!fin?"cur":""}" data-khp="${x.i}"><b class="num">${AR(x.i)}</b><span>${pageFirst(x.a)}</span><small class="num">ص ${AR(x.a)}–${AR(x.b)}</small></button>`).join("")}</div>
@@ -3736,7 +3749,8 @@ function renderKhatma(){
       <p class="small muted">عند تغيير المدة يُحسب ما قرأته بالصفحات وتكمل من حيث وصلت.</p>
       <div class="row"><button class="btn ghost" id="khReset">${ic("x")}إلغاء الختمة</button></div></section>
   </div>`;
-  const rd = $("#khRead"); if (rd) rd.onclick = ()=>openKhReader(cur, kh.pg>p.a && kh.pg<=p.b ? kh.pg : p.a);
+  const bk = BMK().khatma, bkIn = bk && bk.p>=p.a && bk.p<=p.b;
+  const rd = $("#khRead"); if (rd) rd.onclick = ()=>openKhReader(cur, bkIn ? bk.p : kh.pg>p.a && kh.pg<=p.b ? kh.pg : p.a);
   const dn = $("#khDone"); if (dn) dn.onclick = ()=>khMark(cur);
   const ag = $("#khAgain"); if (ag) ag.onclick = ()=>{ S.khN = (S.khN||0)+1; const d = kh.days; S.kh = {days:d, start:todayStr(), done:{}, pg:1}; save(); renderKhatma(); };
   document.querySelectorAll("[data-khp]").forEach(b=>{ let tm;
@@ -3776,6 +3790,9 @@ function openKhReader(part, startPg){
   const si = Math.max(0, pages.indexOf(startPg));
   requestAnimationFrame(()=>{ const sec = sc.children[si]; if (sec) sec.scrollIntoView({inline:"start", block:"nearest"}); upd(); });
   sc.addEventListener("scroll", ()=>requestAnimationFrame(upd));
+  paintBm(sc, "khatma");
+  sc.addEventListener("click", e=>{ const v = e.target.closest("[data-sa]"); if (!v) return; const [s,a] = v.dataset.sa.split(":").map(Number); verseSheet(s, a, "khatma", ()=>paintBm(sc, "khatma")); });
+  const bk = BMK().khatma; if (bk && bk.p>=p.a && bk.p<=p.b){ const v = sc.querySelector(`[data-sa="${bk.s}:${bk.a}"]`); if (v) setTimeout(()=>v.scrollIntoView({block:"center"}), 120); }
   const close = ()=>{ ov.remove(); document.body.classList.remove("sheet-open"); if (tab==="khatma"||tab==="home") render(); };
   ov.querySelector("#khX").onclick = close;
   ov.querySelector("#khOk").onclick = ()=>{ if (!kh.done[part]) khMark(part); close(); };
@@ -3807,6 +3824,14 @@ function openRuqyaGen(){
 const _ra0 = renderAdhkar;
 renderAdhkar = function(){ _ra0();
   if (adkTab==="r" && !$("#rqGen")){ const f = $("#view .wrap > section.panel"); if (f){ f.insertAdjacentHTML("afterend", `<button class="hmemo" id="rqGen"><span class="hti" style="--hue:265">${ic("quran")}</span><div><b>اقرأ الرقية العامة كاملة</b><small>${AR(RUQYA_GEN.length)} موضعاً من القرآن متتابعة، من الفاتحة إلى الناس</small></div><span class="hmc">${ic("next")}</span></button>`); $("#rqGen").onclick = openRuqyaGen; } } };
+
+function goBm(k){
+  const b = BMK()[k]; if (!b) return; buzz();
+  if (k==="mushaf") openMushafAt(b.p, b.s+":"+b.a);
+  else if (k==="khatma"){ const kh = KH(); if (!kh){ openMushafAt(b.p, b.s+":"+b.a); return; } let i = 1; while (i<kh.days && khPart(i,kh.days).b < b.p) i++; openKhReader(i, b.p); }
+  else { if (SUR!==b.s){ syncSur(); useSurah(b.s); quiz = null; }
+    const d = PLAN.findIndex(p=>p.verses.includes(b.a)); viewDay = d>=0 ? d+1 : currentDay(); resetModes(); buildTestOrder(PLAN[viewDay-1]); save(); setTab("today"); setTimeout(()=>{ const v = $(`.v[data-v="${b.a}"]`); if (v) v.scrollIntoView({block:"center", behavior:"smooth"}); }, 200); }
+}
 /* ----- full mushaf: index, search (surah / ayah / page / juz / word), page reader ----- */
 function qnorm(s){
   return s.normalize("NFC").replace(/[ً-ٰٟۖ-ۭـ​-‏]/g,"")
@@ -3842,13 +3867,29 @@ function hlVerse(t, qn){
   for (let i=0;i<nn.length;i++){ if (nq.every((x,k)=>nn[i+k] && (k===0 ? nn[i+k].endsWith(x) : k===nq.length-1 ? nn[i+k].startsWith(x) : nn[i+k]===x))) return ws.map((w,j)=>j>=i && j<i+nq.length ? `<mark>${w}</mark>` : w).join(" "); }
   return t;
 }
+
+/* ----- stop-point bookmarks: one per area (mushaf, khatma, hifz) ----- */
+const BM_NAME = {mushaf:"المصحف", khatma:"الختمة", hifz:"الحفظ"};
+function BMK(){ return S.bmk = S.bmk || {}; }
+function setBm(area, s, a){ BMK()[area] = {s, a, p:QALL.surahs[s].verses[a-1].p, at:Date.now()}; save(); buzz([20,30,20]); toast(`حُفظت علامتك: ${QALL.surahs[s].name} ${AR(a)}`); }
+function bmLabel(b){ return `${QALL.surahs[b.s].name}، الآية ${AR(b.a)}`; }
+function paintBm(root, area){ const b = BMK()[area]; root.querySelectorAll(".v.bm").forEach(x=>x.classList.remove("bm")); if (b){ const v = root.querySelector(`[data-sa="${b.s}:${b.a}"]`); if (v) v.classList.add("bm"); } }
+async function verseSheet(s, a, area, after){
+  const b = BMK()[area], on = b && b.s===s && b.a===a;
+  openSheet(`<h2 id="shTitle">سورة ${QALL.surahs[s].name}، الآية ${AR(a)}</h2>
+    <div class="row"><button class="btn primary" id="vsBm">${ic("star")}${on?"العلامة هنا ✓":"توقفت هنا، ضع علامة"}</button><button class="btn ghost" data-close>إغلاق</button></div>
+    <div class="tafsir" id="vsTaf"><p class="small muted">جارٍ تحميل التفسير…</p></div><p class="small muted">المختصر في تفسير القرآن الكريم، مركز تفسير للدراسات القرآنية.</p>`);
+  $("#vsBm").onclick = ()=>{ setBm(area, s, a); closeSheet(); if (after) after(); };
+  let t = ""; try { t = await tafsirOf(s,a); } catch(err){ t = "تعذّر تحميل التفسير، تحقق من الاتصال."; }
+  const tb = $("#vsTaf"); if (tb) tb.innerHTML = `<p>${t}</p>`;
+}
 let mqView = "sur";
 function renderMushaf(){
-  const last = S.mq && S.mq.p;
+  const bmm = BMK().mushaf, last = bmm ? bmm.p : S.mq && S.mq.p;
   const juzStart = []; for (let p=1, j=0; p<=NPAGES; p++){ const x = juzOf(p); if (x!==j){ juzStart.push([x,p]); j = x; } }
   $("#view").innerHTML = `<div class="wrap" style="gap:14px">
     <section class="panel"><div class="msearch"><span>${ic("search")}</span><input id="mq" type="search" inputmode="search" placeholder="ابحث: سورة، آية (٢:٢٥٥)، كلمة، صفحة ٥٠، جزء ٣" autocomplete="off" enterkeyhint="search" aria-label="البحث في المصحف"></div>
-      ${last?`<button class="hmemo" id="mqLast" style="margin-top:10px"><span class="hti" style="--hue:45">${ic("book")}</span><div><b>تابع القراءة</b><small>صفحة ${AR(last)} · ${pageFirst(last)}</small></div><span class="hmc">${ic("next")}</span></button>`:""}
+      ${last?`<button class="hmemo" id="mqLast" style="margin-top:10px"><span class="hti" style="--hue:45">${ic("book")}</span><div><b>${bmm?"تابع من علامتك":"تابع القراءة"}</b><small>${bmm?bmLabel(bmm)+" · صفحة "+AR(bmm.p):"صفحة "+AR(last)+" · "+pageFirst(last)}</small></div><span class="hmc">${ic("next")}</span></button>`:""}
     </section>
     <div id="mqRes"></div>
     <div id="mqIdx"><div class="seg" role="tablist"><button class="${mqView==="sur"?"on":""}" data-mv="sur">السور</button><button class="${mqView==="juz"?"on":""}" data-mv="juz">الأجزاء</button></div>
@@ -3871,7 +3912,7 @@ function renderMushaf(){
   $("#view").onclick = e=>{
     const mv = e.target.closest("[data-mv]"); if (mv){ mqView = mv.dataset.mv; renderMushaf(); return; }
     const b = e.target.closest("[data-mp]"); if (b){ buzz(); openMushafAt(+b.dataset.mp, b.dataset.sa); return; }
-    if (e.target.closest("#mqLast")) openMushafAt(last); };
+    if (e.target.closest("#mqLast")) openMushafAt(last, bmm ? bmm.s+":"+bmm.a : null); };
 }
 function openMushafAt(pg, sa){
   pg = Math.max(1, Math.min(NPAGES, pg|0));
@@ -3890,6 +3931,7 @@ function openMushafAt(pg, sa){
     box.scrollTop = 0;
     lab.textContent = `صفحة ${AR(cur)} من ${AR(NPAGES)}`;
     S.mq = {p:cur}; save();
+    paintBm(box, "mushaf");
     if (sa2){ const v = box.querySelector(`[data-sa="${sa2}"]`); if (v){ v.classList.add("hit"); setTimeout(()=>v.scrollIntoView({block:"center", behavior:"smooth"}), 80); } }
   };
   show(pg, sa);
@@ -3902,11 +3944,9 @@ function openMushafAt(pg, sa){
   box.addEventListener("touchend", e=>{ if (x0===null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5) show(cur + (dx>0 ? 1 : -1), null, dx>0 ? 1 : -1); }, {passive:true});
   // tap a verse: tafsir
-  box.onclick = async e=>{ const v = e.target.closest("[data-sa]"); if (!v) return;
+  box.onclick = e=>{ const v = e.target.closest("[data-sa]"); if (!v) return;
     box.querySelectorAll(".v.sel").forEach(x=>x.classList.remove("sel")); v.classList.add("sel");
-    const [s,a] = v.dataset.sa.split(":").map(Number);
-    let t = ""; try { t = await tafsirOf(s,a); } catch(err){ t = "تعذّر تحميل التفسير، تحقق من الاتصال."; }
-    openSheet(`<h2 id="shTitle">سورة ${QALL.surahs[s].name}، الآية ${AR(a)}</h2><div class="tafsir"><p>${t}</p></div><p class="small muted">المختصر في تفسير القرآن الكريم، مركز تفسير للدراسات القرآنية.</p><div class="row"><button class="btn ghost" data-close>إغلاق</button></div>`); };
+    const [s,a] = v.dataset.sa.split(":").map(Number); verseSheet(s, a, "mushaf", ()=>paintBm(box, "mushaf")); };
 }
 
 const _rm1 = renderMethod;

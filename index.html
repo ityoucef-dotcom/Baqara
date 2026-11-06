@@ -1074,6 +1074,8 @@ section.fold:not(.open){padding-block:14px}
 .hbm{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:18px;border:1px solid color-mix(in oklab,var(--gold) 40%,var(--line));background:color-mix(in oklab,var(--gold) 8%,var(--raised));color:var(--ink);font:inherit;text-align:start;cursor:pointer}
 .hbm div{flex:1;display:grid}.hbm small{color:var(--gold);font-size:.75rem}
 .hbm .hti{width:36px;height:36px}
+.wg-steps{margin:.4rem 0 .8rem;padding-inline-start:1.2rem;line-height:1.9}
+.wg-code{width:100%;min-height:45vh;direction:ltr;text-align:left;font:12px/1.4 ui-monospace,monospace;border-radius:12px;border:1px solid var(--line,#ccc);padding:.6rem;background:var(--card,#fff);color:inherit}
 </style>
 
 <div class="wrap">
@@ -3954,6 +3956,93 @@ renderMethod = function(){ if (tab==="mushaf") return renderMushaf(); _rm1(); };
 NAV_MAIN.splice(1, 0, ["mushaf","المصحف","quran"]);
 TAB_TITLE.mushaf = "المصحف الشريف";
 { const h = (location.hash||"").slice(1); if (h==="mushaf") tab = h; }
+/* ----- home-screen widget through the free Scriptable app (iOS), personalised with the user's prayer settings ----- */
+function widgetCode(){
+  const c = cityNow(), p = PP(), M = METHODS[methodNow()] || METHODS.mwl;
+  const cfg = {city:c.name, lat:c.lat, lng:c.lng, f:M.f, i:M.i||0, iM:M.iM||0, asr:p.asr||1, adj:p.adj||{}, url:location.href.split("#")[0]+"#home"};
+  return `// رفيق المسلم: ودجت مواقيت الصلاة (Scriptable)
+// أُنشئ من البرنامج بإعداداتك: ${cfg.city}
+const CFG = ${JSON.stringify(cfg)};
+const NAMES = {fajr:"الفجر",sunrise:"الشروق",dhuhr:"الظهر",asr:"العصر",maghrib:"المغرب",isha:"العشاء"};
+const DHIKR = ["سبحان الله وبحمده، سبحان الله العظيم","لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير","لا حول ولا قوة إلا بالله","أستغفر الله وأتوب إليه","اللهم صلّ وسلّم على نبينا محمد","سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر","حسبي الله لا إله إلا هو عليه توكلت"];
+const PT = (()=>{
+  const dr = Math.PI/180, sin=d=>Math.sin(d*dr), cos=d=>Math.cos(d*dr), tan=d=>Math.tan(d*dr);
+  const asin=x=>Math.asin(x)/dr, acos=x=>Math.acos(x)/dr, atan2=(y,x)=>Math.atan2(y,x)/dr, acot=x=>Math.atan(1/x)/dr;
+  const fix=(a,b)=>{ a = a - b*Math.floor(a/b); return a<0 ? a+b : a; };
+  function sun(jd){ const D = jd-2451545.0, g = fix(357.529+0.98560028*D,360), q = fix(280.459+0.98564736*D,360);
+    const L = fix(q+1.915*sin(g)+0.020*sin(2*g),360), e = 23.439-0.00000036*D, RA = atan2(cos(e)*sin(L), cos(L))/15;
+    return {decl: asin(sin(e)*sin(L)), eqt: q/15 - fix(RA,24)}; }
+  function julian(y,m,d){ if (m<=2){ y-=1; m+=12; } const A=Math.floor(y/100), B=2-A+Math.floor(A/4); return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5; }
+  return function(date){
+    const lat = CFG.lat, lng = CFG.lng, y=date.getFullYear(), mo=date.getMonth(), d=date.getDate();
+    const jd = julian(y,mo+1,d) - lng/(15*24), mid = t => fix(12 - sun(jd+t).eqt, 24);
+    const ang = (a,t,ccw)=>{ const s=sun(jd+t), v=(-sin(a)-sin(s.decl)*sin(lat))/(cos(s.decl)*cos(lat)); if (v<-1||v>1) return NaN; const T=acos(v)/15; return mid(t)+(ccw?-T:T); };
+    const asr = (f,t)=>{ const s=sun(jd+t); return ang(-acot(f+tan(Math.abs(lat-s.decl))), t); };
+    let t = {fajr:5,sunrise:6,dhuhr:12,asr:13,maghrib:18,isha:18};
+    for (let i=0;i<2;i++){ const p = {}; for (const k in t) p[k] = (isNaN(t[k])?12:t[k])/24;
+      t = {fajr:ang(CFG.f,p.fajr,true), sunrise:ang(0.833,p.sunrise,true), dhuhr:mid(p.dhuhr), asr:asr(CFG.asr,p.asr), maghrib:ang(0.833,p.maghrib), isha: CFG.iM ? NaN : ang(CFG.i,p.isha)};
+      if (CFG.iM) t.isha = t.maghrib + CFG.iM/60; }
+    const night = 24 - (t.maghrib - t.sunrise);
+    if (isNaN(t.fajr) || t.sunrise - t.fajr > night*CFG.f/60) t.fajr = t.sunrise - night*CFG.f/60;
+    if (!CFG.iM && (isNaN(t.isha) || t.isha - t.maghrib > night*CFG.i/60)) t.isha = t.maghrib + night*CFG.i/60;
+    const base = Date.UTC(y,mo,d), out = {};
+    for (const k in t) out[k] = new Date(base + (t[k] - lng/15)*3600e3 + (CFG.adj[k]||0)*60000);
+    return out;
+  };
+})();
+const hm = d => String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+const now = new Date(), today = PT(now), tm = new Date(now); tm.setDate(tm.getDate()+1);
+const ORDER = ["fajr","dhuhr","asr","maghrib","isha"];
+let nk = ORDER.find(k=>today[k] > now), nt = nk ? today[nk] : PT(tm).fajr; if (!nk) nk = "fajr";
+let hij = ""; try { hij = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long"}).format(now); } catch(e){}
+const GOLD = new Color("#e2c27a"), WHITE = Color.white(), DIM = new Color("#ffffff", 0.7);
+const w = new ListWidget();
+const g = new LinearGradient(); g.colors = [new Color("#0b4d3b"), new Color("#062a20")]; g.locations = [0,1]; w.backgroundGradient = g;
+w.url = CFG.url; w.setPadding(14,14,14,14);
+w.refreshAfterDate = new Date(Math.min(nt.getTime()+60000, now.getTime()+30*60000));
+const fam = config.widgetFamily || "medium";
+function txt(st, s, size, color, bold){ const t = st.addText(s); t.font = bold ? Font.boldSystemFont(size) : Font.systemFont(size); t.textColor = color; t.rightAlignText(); t.lineLimit = 2; t.minimumScaleFactor = 0.6; return t; }
+function nextBlock(st){
+  const s = st.addStack(); s.layoutVertically();
+  const h = s.addStack(); h.addSpacer(); txt(h, "الصلاة القادمة", 11, DIM);
+  const n = s.addStack(); n.addSpacer(); txt(n, NAMES[nk]+"  "+hm(nt), fam==="small"?20:24, GOLD, true);
+  const c = s.addStack(); c.addSpacer(); const d = c.addDate(nt); d.applyTimerStyle(); d.font = Font.boldMonospacedSystemFont(fam==="small"?16:18); d.textColor = WHITE; d.rightAlignText();
+  if (hij){ s.addSpacer(4); const hh = s.addStack(); hh.addSpacer(); txt(hh, hij+" · "+CFG.city, 10, DIM); }
+}
+if (fam==="small"){ nextBlock(w); }
+else {
+  const row = w.addStack(); row.centerAlignContent();
+  const list = row.addStack(); list.layoutVertically();
+  for (const k of ["isha","maghrib","asr","dhuhr","fajr"].reverse()){
+    const r = list.addStack(); r.spacing = 6;
+    const a = r.addText(hm(today[k])); a.font = Font.mediumMonospacedSystemFont(12); a.textColor = k===nk ? GOLD : WHITE;
+    r.addSpacer(); const b = r.addText(NAMES[k]); b.font = k===nk ? Font.boldSystemFont(12) : Font.systemFont(12); b.textColor = k===nk ? GOLD : DIM;
+  }
+  list.size = new Size(110, 0);
+  row.addSpacer(12); nextBlock(row);
+  if (fam==="large" || fam==="extraLarge"){
+    w.addSpacer(14);
+    const q = w.addStack(); q.addSpacer(); txt(q, DHIKR[Math.floor(now.getTime()/36e5) % DHIKR.length], 15, WHITE, true);
+    w.addSpacer(6); const z = w.addStack(); z.addSpacer(); txt(z, "اضغط لفتح رفيق المسلم", 10, DIM);
+  }
+}
+if (config.runsInWidget) Script.setWidget(w); else await w.presentMedium();
+Script.complete();
+`;
+}
+function widgetPanelHTML(){
+  return `<section class="panel" id="wgPanel"><div class="ph"><span class="badge gold">${ic("grid")}</span><h2>ودجت على الشاشة الرئيسية</h2></div>
+    <p class="small">يعرض الصلاة القادمة مع عدّ تنازلي، ومواقيت اليوم، والتاريخ الهجري، وذكراً يتجدد كل ساعة. يعمل عبر تطبيق <b>Scriptable</b> المجاني من App Store، ويحسب المواقيت بإعداداتك هنا (${cityNow().name}).</p>
+    <ol class="small wg-steps"><li>ثبّت تطبيق Scriptable من App Store.</li><li>اضغط «انسخ كود الودجت» بالأسفل.</li><li>افتح Scriptable، واضغط + في الأعلى، والصق الكود، وسمّه «رفيق المسلم».</li><li>اضغط مطوّلاً على الشاشة الرئيسية ثم +، واختر Scriptable وحجم الودجت (صغير أو متوسط أو كبير).</li><li>اضغط مطوّلاً على الودجت، ثم «تعديل الودجت»، واختر في Script: رفيق المسلم.</li></ol>
+    <div class="row"><button class="btn primary" id="wgCopy">${ic("share")}انسخ كود الودجت</button>${navigator.share?`<button class="btn" id="wgShare">مشاركة</button>`:""}</div>
+    <p class="small muted">إذا غيّرت مدينتك أو طريقة الحساب، انسخ الكود من جديد والصقه مكان القديم.</p></section>`;
+}
+function bindWidget(){
+  const c = $("#wgCopy"); if (c) c.onclick = async ()=>{ const code = widgetCode(); try { await navigator.clipboard.writeText(code); toast("نُسخ كود الودجت، الصقه في Scriptable"); } catch(e){ openSheet(`<h2 id="shTitle">كود الودجت</h2><p class="small muted">حدّد النص كله وانسخه.</p><textarea class="wg-code" readonly>${code.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</textarea><div class="row"><button class="btn ghost" data-close>إغلاق</button></div>`); } };
+  const s = $("#wgShare"); if (s) s.onclick = ()=>navigator.share({title:"رفيق المسلم: ودجت", text: widgetCode()}).catch(()=>{});
+}
+const _rp1 = renderPrayer;
+renderPrayer = function(){ _rp1(); window.__wg = widgetCode; const f = $("#fastPanel"); if (f && !$("#wgPanel")){ f.insertAdjacentHTML("afterend", widgetPanelHTML()); bindWidget(); } };
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

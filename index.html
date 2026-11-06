@@ -1042,6 +1042,31 @@ section.fold:not(.open){padding-block:14px}
 .rq-h span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);font-size:.8rem}
 .rq-h small{color:var(--muted);margin-inline-start:auto}
 .rq-n{margin:0}
+/* full mushaf */
+.msearch{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:4px 12px;background:var(--sunk)}
+.msearch:focus-within{border-color:var(--accent)}
+.msearch svg{width:20px;height:20px;color:var(--muted)}
+.msearch input{flex:1;border:0;background:transparent;font:inherit;font-size:16px;color:var(--ink);padding:10px 0;outline:0;min-width:0}
+.mlist{display:grid;gap:8px;margin-top:12px}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--raised);color:var(--ink);font:inherit;text-align:start;cursor:pointer}
+.mrow+.mrow{margin-top:0}
+.panel .mrow{margin-top:8px}
+.mn{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--sunk);font-size:.9rem;color:var(--gold)}
+.mt{flex:1;display:grid}.mt small{color:var(--muted);font-size:.78rem}
+.mres{display:grid;gap:4px;width:100%;text-align:start;padding:10px 12px;margin-top:8px;border-radius:14px;border:1px solid var(--line);background:var(--raised);color:var(--ink);font:inherit;cursor:pointer}
+.mres b{font-size:.85rem;color:var(--gold)}
+.mres .q{font-family:var(--f-q);font-size:1.25rem;line-height:2}
+.mres mark{background:color-mix(in oklab,var(--gold) 30%,transparent);color:inherit;border-radius:4px;padding:0 2px}
+.mq-pg{flex:1;overflow-y:auto;padding:10px 10px calc(24px + env(safe-area-inset-bottom,0px))}
+.mq-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.mq-pg.in-l{animation:mqL .25s ease}.mq-pg.in-r{animation:mqR .25s ease}
+@keyframes mqL{from{transform:translateX(-24px);opacity:.3}}@keyframes mqR{from{transform:translateX(24px);opacity:.3}}
+@media (prefers-reduced-motion:reduce){.mq-pg.in-l,.mq-pg.in-r{animation:none}}
+.mqr .v{cursor:pointer;border-radius:6px}
+.mqr .v.hit{background:color-mix(in oklab,var(--gold) 22%,transparent)}
+.mqr .v.sel{background:color-mix(in oklab,var(--accent) 14%,transparent)}
+.mqr .pgv-h b{flex:1}
+.sheet{z-index:80}
 </style>
 
 <div class="wrap">
@@ -3657,6 +3682,7 @@ function renderHome(){
       <span class="hmc">${ic(memDone?"check":"next")}</span></button>
     <h2 class="hsec">استكشف</h2>
     <div class="hgrid">
+      ${tile("mushaf", 45, "quran", "المصحف", "القراءة والبحث", S.mq&&S.mq.p?`<span class="hval">صفحة ${AR(S.mq.p)}</span>`:"")}
       ${tile("tasbih", 95, "beads", "المسبحة", "تسبيحة اليوم", `<span class="hnum num">${AR(tbToday())}</span>`)}
       ${tile("hijri", 215, "calendar", "التقويم الهجري", ram>0 ? `رمضان بعد ${AR(ram)} يوماً` : ram===0 ? "اليوم أول رمضان" : "", h?`<span class="hval">${AR(h.d)} ${HMONTHS[h.m-1]}</span>`:"")}
       ${tile("fast", 30, "moon", "صيام التطوع", nf ? `${nf.i===0?"اليوم":nf.i===1?"غداً":"بعد "+AR(nf.i)+" أيام"}` : "", nf?`<span class="hval">${nf.r.map(x=>x.t).join("، ")}</span>`:"")}
@@ -3734,7 +3760,7 @@ function pageHTML(pg){
   for (const [s,a] of PAGES[pg]){
     const sur = QALL.surahs[s], v = sur.verses[a-1];
     if (a===1){ h += `<div class="surah-band">سورة ${sur.name}</div>`; if (s!==1 && s!==9) h += `<div class="basm">${QALL.basmala.map(w=>segs(w).map(([t,c])=>c>=0?`<span class="t${c}">${t}</span>`:t).join("")).join(" ")}</div>`; }
-    h += `<span class="v">${v.w.map(w=>isMark(w)?w:segs(w).map(([t,c])=>c>=0?`<span class="t${c}">${t}</span>`:t).join("")).join(" ")} <span class="am">${AR(a)}</span></span> `;
+    h += `<span class="v" data-sa="${s}:${a}">${v.w.map(w=>isMark(w)?w:segs(w).map(([t,c])=>c>=0?`<span class="t${c}">${t}</span>`:t).join("")).join(" ")} <span class="am">${AR(a)}</span></span> `;
   }
   return h;
 }
@@ -3781,6 +3807,113 @@ function openRuqyaGen(){
 const _ra0 = renderAdhkar;
 renderAdhkar = function(){ _ra0();
   if (adkTab==="r" && !$("#rqGen")){ const f = $("#view .wrap > section.panel"); if (f){ f.insertAdjacentHTML("afterend", `<button class="hmemo" id="rqGen"><span class="hti" style="--hue:265">${ic("quran")}</span><div><b>اقرأ الرقية العامة كاملة</b><small>${AR(RUQYA_GEN.length)} موضعاً من القرآن متتابعة، من الفاتحة إلى الناس</small></div><span class="hmc">${ic("next")}</span></button>`); $("#rqGen").onclick = openRuqyaGen; } } };
+/* ----- full mushaf: index, search (surah / ayah / page / juz / word), page reader ----- */
+function qnorm(s){
+  return s.normalize("NFC").replace(/[ً-ٰٟۖ-ۭـ​-‏]/g,"")
+    .replace(/[أإآٱ]/g,"ا").replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/ء/g,"").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/يا\s+ا/g,"يا").replace(/ا/g,"").replace(/\s+/g," ").trim();
+}
+let QIDX = null;
+function qIndex(){
+  if (QIDX) return QIDX; QIDX = [];
+  for (let s=1; s<=114; s++) QALL.surahs[s].verses.forEach((v,i)=>{ const t = v.w.filter(w=>!isMark(w)).map(wtext).join(" "); const n = qnorm(t); QIDX.push({s, a:i+1, p:v.p, t, n:" "+n+" ", ns:n.replace(/ /g,"")}); });
+  return QIDX;
+}
+const SNAMES_N = (()=>{ const o = []; for (let s=1; s<=114; s++) o.push([s, qnorm(QALL.surahs[s].name)]); return o; })();
+function toLatinDigits(q){ return q.replace(/[٠-٩]/g, d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)); }
+function mSearch(qr){
+  const q = toLatinDigits(qr.trim()); if (!q) return null;
+  let m;
+  if ((m = q.match(/^(\d{1,3})\s*[:：\-\s]\s*(\d{1,3})$/))){ const s = +m[1], a = +m[2]; if (QALL.surahs[s] && a>=1 && a<=QALL.surahs[s].verses.length) return {go:[{s,a,p:QALL.surahs[s].verses[a-1].p}]}; }
+  if ((m = q.match(/^(?:ص|صفحة)\s*(\d{1,3})$/)) && +m[1]>=1 && +m[1]<=NPAGES) return {page:+m[1]};
+  if ((m = q.match(/^(?:ج|جزء|الجزء)\s*(\d{1,2})$/)) && +m[1]>=1 && +m[1]<=30){ const j = +m[1]; for (let p=1;p<=NPAGES;p++) if (juzOf(p)===j) return {page:p}; }
+  const qn = qnorm(q.replace(/^سوره?\s+/,""));
+  const surs = /^\d{1,3}$/.test(q) ? (QALL.surahs[+q] ? [+q] : []) : SNAMES_N.filter(([s,n])=>n===qn || (qn.length>=2 && (n.startsWith(qn) || n.replace(/^ل/,"").startsWith(qn)))).map(x=>x[0]);
+  // "البقرة 255" style
+  if ((m = q.match(/^(.+?)\s+(\d{1,3})$/))){ const n = qnorm(m[1].replace(/^سوره?\s+/,"")); const hit = SNAMES_N.find(([s,x])=>x===n || x.startsWith(n)); if (hit){ const s = hit[0], a = +m[2]; if (a>=1 && a<=QALL.surahs[s].verses.length) return {go:[{s,a,p:QALL.surahs[s].verses[a-1].p}]}; } }
+  const multi = qn.includes(" "), qs = qn.replace(/ /g,""), q1 = !multi && /^ل/.test(qn) && qn.length>=4 ? qn.slice(1) : qn;
+  const words = qn.length>=2 ? qIndex().filter(x=>multi ? x.ns.includes(qs) : x.n.includes(q1)) : [];
+  return {surs, words, qn: multi ? qn : q1};
+}
+function hlVerse(t, qn){
+  // highlight words whose normalized form contains the query (or the query spans several words)
+  const ws = t.split(" "), nq = qn.split(" ");
+  if (nq.length===1) return ws.map(w=>qnorm(w).includes(qn) ? `<mark>${w}</mark>` : w).join(" ");
+  const nn = ws.map(qnorm);
+  for (let i=0;i<nn.length;i++){ if (nq.every((x,k)=>nn[i+k] && (k===0 ? nn[i+k].endsWith(x) : k===nq.length-1 ? nn[i+k].startsWith(x) : nn[i+k]===x))) return ws.map((w,j)=>j>=i && j<i+nq.length ? `<mark>${w}</mark>` : w).join(" "); }
+  return t;
+}
+let mqView = "sur";
+function renderMushaf(){
+  const last = S.mq && S.mq.p;
+  const juzStart = []; for (let p=1, j=0; p<=NPAGES; p++){ const x = juzOf(p); if (x!==j){ juzStart.push([x,p]); j = x; } }
+  $("#view").innerHTML = `<div class="wrap" style="gap:14px">
+    <section class="panel"><div class="msearch"><span>${ic("search")}</span><input id="mq" type="search" inputmode="search" placeholder="ابحث: سورة، آية (٢:٢٥٥)، كلمة، صفحة ٥٠، جزء ٣" autocomplete="off" enterkeyhint="search" aria-label="البحث في المصحف"></div>
+      ${last?`<button class="hmemo" id="mqLast" style="margin-top:10px"><span class="hti" style="--hue:45">${ic("book")}</span><div><b>تابع القراءة</b><small>صفحة ${AR(last)} · ${pageFirst(last)}</small></div><span class="hmc">${ic("next")}</span></button>`:""}
+    </section>
+    <div id="mqRes"></div>
+    <div id="mqIdx"><div class="seg" role="tablist"><button class="${mqView==="sur"?"on":""}" data-mv="sur">السور</button><button class="${mqView==="juz"?"on":""}" data-mv="juz">الأجزاء</button></div>
+    <div class="mlist">${mqView==="sur" ? Array.from({length:114},(_,i)=>i+1).map(s=>{ const x = QALL.surahs[s]; return `<button class="mrow" data-mp="${x.verses[0].p}"><span class="mn num">${AR(s)}</span><span class="mt"><b>${x.name}</b><small>${x.type==="medinan"||x.type==="مدنية"?"مدنية":"مكية"} · ${AR(x.verses.length)} آية</small></span><span class="small muted num">ص ${AR(x.verses[0].p)}</span></button>`; }).join("")
+      : juzStart.map(([j,p])=>`<button class="mrow" data-mp="${p}"><span class="mn num">${AR(j)}</span><span class="mt"><b>الجزء ${AR(j)}</b><small>يبدأ من ${pageFirst(p)}</small></span><span class="small muted num">ص ${AR(p)}</span></button>`).join("")}</div></div>
+  </div>`;
+  const inp = $("#mq"), res = $("#mqRes"), idx = $("#mqIdx");
+  let tm;
+  const run = ()=>{ const r = mSearch(inp.value);
+    if (!r){ res.innerHTML = ""; idx.hidden = false; return; }
+    if (r.go){ res.innerHTML = r.go.map(x=>`<button class="mres" data-mp="${x.p}" data-sa="${x.s}:${x.a}"><b>سورة ${QALL.surahs[x.s].name}، الآية ${AR(x.a)}</b><span class="q">${qIndex().find(y=>y.s===x.s&&y.a===x.a).t}</span></button>`).join(""); idx.hidden = true; return; }
+    if (r.page){ res.innerHTML = `<button class="mres" data-mp="${r.page}"><b>صفحة ${AR(r.page)} · الجزء ${AR(juzOf(r.page))}</b><span>${pageFirst(r.page)}</span></button>`; idx.hidden = true; return; }
+    const W = r.words, shown = W.slice(0, 60);
+    res.innerHTML = (r.surs.length ? `<section class="panel"><h3 class="small muted">السور</h3>${r.surs.slice(0,8).map(s=>`<button class="mrow" data-mp="${QALL.surahs[s].verses[0].p}"><span class="mn num">${AR(s)}</span><span class="mt"><b>سورة ${QALL.surahs[s].name}</b><small>${AR(QALL.surahs[s].verses.length)} آية</small></span></button>`).join("")}</section>` : "")
+      + (W.length ? `<section class="panel"><h3 class="small muted">${AR(W.length)} موضعاً في القرآن${W.length>60?"، تظهر أول ٦٠":""}</h3>${shown.map(x=>`<button class="mres" data-mp="${x.p}" data-sa="${x.s}:${x.a}"><b>${QALL.surahs[x.s].name} ${AR(x.a)}</b><span class="q">${hlVerse(x.t, r.qn)}</span></button>`).join("")}</section>`
+      : r.surs.length ? "" : `<p class="small muted" style="text-align:center">لا نتائج. جرّب كلمة أخرى، أو اكتبها بلا تشكيل.</p>`);
+    idx.hidden = true; };
+  inp.oninput = ()=>{ clearTimeout(tm); tm = setTimeout(run, 220); };
+  inp.onkeydown = e=>{ if (e.key==="Enter"){ clearTimeout(tm); run(); inp.blur(); } };
+  $("#view").onclick = e=>{
+    const mv = e.target.closest("[data-mv]"); if (mv){ mqView = mv.dataset.mv; renderMushaf(); return; }
+    const b = e.target.closest("[data-mp]"); if (b){ buzz(); openMushafAt(+b.dataset.mp, b.dataset.sa); return; }
+    if (e.target.closest("#mqLast")) openMushafAt(last); };
+}
+function openMushafAt(pg, sa){
+  pg = Math.max(1, Math.min(NPAGES, pg|0));
+  const ov = document.createElement("div"); ov.className = "pgv khr mqr"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","المصحف");
+  ov.innerHTML = `<div class="pgv-h"><button class="btn icon ghost" id="mqX" aria-label="إغلاق">${ic("x")}</button><b id="mqL"></b>
+      <button class="btn icon ghost" id="mqPrev" aria-label="الصفحة السابقة">${ic("next")}</button><button class="btn icon ghost" id="mqNext" aria-label="الصفحة التالية" style="transform:scaleX(-1)">${ic("next")}</button></div>
+    <div class="mq-pg" id="mqPg"></div>`;
+  document.body.appendChild(ov); document.body.classList.add("sheet-open");
+  const box = ov.querySelector("#mqPg"), lab = ov.querySelector("#mqL");
+  let cur = pg;
+  const show = (p, sa2, dir)=>{
+    cur = Math.max(1, Math.min(NPAGES, p));
+    const [s0] = PAGES[cur][0];
+    box.innerHTML = `<div class="mushaf"><div class="mushaf-in"><div class="mq-top small muted"><span>سورة ${QALL.surahs[s0].name}</span><span>الجزء ${AR(juzOf(cur))}</span></div><div class="qtext" style="--qsize:${S.prefs.size}rem">${pageHTML(cur)}</div><div class="pgno num">${AR(cur)}</div></div></div>`;
+    if (dir) { box.classList.remove("in-l","in-r"); void box.offsetWidth; box.classList.add(dir>0?"in-l":"in-r"); }
+    box.scrollTop = 0;
+    lab.textContent = `صفحة ${AR(cur)} من ${AR(NPAGES)}`;
+    S.mq = {p:cur}; save();
+    if (sa2){ const v = box.querySelector(`[data-sa="${sa2}"]`); if (v){ v.classList.add("hit"); setTimeout(()=>v.scrollIntoView({block:"center", behavior:"smooth"}), 80); } }
+  };
+  show(pg, sa);
+  ov.querySelector("#mqX").onclick = ()=>{ ov.remove(); document.body.classList.remove("sheet-open"); if (tab==="mushaf") renderMushaf(); };
+  ov.querySelector("#mqNext").onclick = ()=>show(cur+1, null, 1);
+  ov.querySelector("#mqPrev").onclick = ()=>show(cur-1, null, -1);
+  // swipe: in an Arabic mushaf the next page is to the left, so a finger moving right turns forward
+  let x0 = null, y0 = 0;
+  box.addEventListener("touchstart", e=>{ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+  box.addEventListener("touchend", e=>{ if (x0===null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5) show(cur + (dx>0 ? 1 : -1), null, dx>0 ? 1 : -1); }, {passive:true});
+  // tap a verse: tafsir
+  box.onclick = async e=>{ const v = e.target.closest("[data-sa]"); if (!v) return;
+    box.querySelectorAll(".v.sel").forEach(x=>x.classList.remove("sel")); v.classList.add("sel");
+    const [s,a] = v.dataset.sa.split(":").map(Number);
+    let t = ""; try { t = await tafsirOf(s,a); } catch(err){ t = "تعذّر تحميل التفسير، تحقق من الاتصال."; }
+    openSheet(`<h2 id="shTitle">سورة ${QALL.surahs[s].name}، الآية ${AR(a)}</h2><div class="tafsir"><p>${t}</p></div><p class="small muted">المختصر في تفسير القرآن الكريم، مركز تفسير للدراسات القرآنية.</p><div class="row"><button class="btn ghost" data-close>إغلاق</button></div>`); };
+}
+
+const _rm1 = renderMethod;
+renderMethod = function(){ if (tab==="mushaf") return renderMushaf(); _rm1(); };
+NAV_MAIN.splice(1, 0, ["mushaf","المصحف","quran"]);
+TAB_TITLE.mushaf = "المصحف الشريف";
+{ const h = (location.hash||"").slice(1); if (h==="mushaf") tab = h; }
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

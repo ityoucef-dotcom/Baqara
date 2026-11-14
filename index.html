@@ -1080,6 +1080,35 @@ section.fold:not(.open){padding-block:14px}
 .stby.on{background:color-mix(in oklab,var(--accent,#0b6b50) 16%,transparent);border-color:color-mix(in oklab,var(--accent,#0b6b50) 45%,transparent)}
 .stby .small{margin-top:3px;line-height:1.6}.stby .btn{flex:none}
 .geo-steps{margin:.4rem 0 0;padding-inline-start:1.2rem;line-height:1.9}
+/* ----- 2026-11 polish ----- */
+.hsec{font-size:1.05rem;margin:6px 4px -4px}
+.hgrid{grid-template-columns:repeat(3,1fr);gap:10px}
+.htile{min-height:0;padding:14px 6px 12px;justify-items:center;text-align:center;gap:5px;border-radius:18px}
+.htile .hti{width:44px;height:44px;border-radius:14px}
+.htile b{font-size:.92rem;line-height:1.3}
+.htile small{margin-top:0;font-size:.72rem;line-height:1.35;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.htile:active,.hcard:active,.hmemo:active,.hpray:active{transform:scale(.98)}
+.seg.adkseg{grid-template-columns:repeat(5,1fr);gap:4px;padding:6px}
+.seg.adkseg button{flex-direction:column;gap:3px;padding:8px 2px;font-size:.72rem;line-height:1.2;border-radius:12px;white-space:normal;min-height:56px}
+.seg.adkseg button .ic{width:20px;height:20px}
+section.panel.acc{padding:0;overflow:hidden}
+.accd>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;grid-template-areas:"h c" "s c";align-items:center;gap:2px 10px;padding:14px 16px}
+.accd>summary::-webkit-details-marker{display:none}
+.accd>summary .ph,.accd>summary .spread{grid-area:h;margin:0}
+.accd>summary .ph h2{font-size:1.05rem}
+.accd>summary .acc-sub{grid-area:s;padding-inline-start:52px;line-height:1.5}
+.accd>summary .acc-chev{grid-area:c;color:var(--muted);transition:transform .2s;display:grid;place-items:center}
+.accd>summary .acc-chev .ic{transform:scaleX(-1) rotate(90deg)}
+.accd[open]>summary .acc-chev{transform:rotate(180deg)}
+.accd>.acc-b{padding:0 16px 16px;display:grid;gap:12px}
+.acc-in{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.acc-in>summary{cursor:pointer;font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.acc-in[open]>summary{margin-bottom:10px}
+.linkbtn{font:inherit;background:none;border:0;padding:0;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;opacity:.9}
+.accd>summary{text-align:start;font-weight:400}
+.accd>summary .ph,.accd>summary .spread{justify-self:start}
+.accd>summary .ph h2{color:var(--ink)}
+.accd>summary .acc-sub{font-weight:400;justify-self:start}
 </style>
 
 <div class="wrap">
@@ -1643,7 +1672,7 @@ function renderToday(){
         <div class="small muted">${dateOf(viewDay)}</div></div>
         <button class="btn icon" id="nextDay" aria-label="اليوم التالي" ${viewDay>=PLAN.length?"disabled":""}>${ic("next")}</button>
       </div>
-      <div style="text-align:start"><b>${headTitle}</b><div class="small muted">${portionLabel(p)} · ${verses.length} آية · الجزء ${V[verses[0]-1].j}${V[verses[verses.length-1]-1].j!==V[verses[0]-1].j?"–"+V[verses[verses.length-1]-1].j:""}</div></div>
+      <div style="text-align:start"><b>${headTitle}</b><div class="small muted">${portionLabel(p)} · ${ayaN(verses.length)} · الجزء ${V[verses[0]-1].j}${V[verses[verses.length-1]-1].j!==V[verses[0]-1].j?"–"+V[verses[verses.length-1]-1].j:""}</div></div>
     </div>
     <div class="stepbar"><span class="small muted num">${Object.values(st).filter(Boolean).length}/${steps.length} خطوات</span><div class="bar"><i style="width:${Object.values(st).filter(Boolean).length/steps.length*100}%"></i></div></div>
     <ul class="steps">${steps.map((s,i)=>`<li><label><input type="checkbox" id="st-${p.day}-${i}" data-step="${i}" ${st[i]?"checked":""}><span class="${st[i]?"done":""}">${s}</span></label></li>`).join("")}</ul>
@@ -1668,7 +1697,7 @@ function renderToday(){
     </div>
     ${mode==="test"?`<p class="note">اقرأ من حفظك، وبعد كل كلمة تنطقها اضغط «أظهر الكلمة التالية» لتتأكد. إذا نسيت فاضغط الكلمة المخفية نفسها لتنكشف وتُحسب «تلقيناً».</p>`:""}
     ${mode==="first"||mode==="fade"?`<p class="note">اضغط أي كلمة مخفية لكشفها.</p>`:""}
-    <div class="row" id="chips">${ruleChips(verses)}</div>
+    <details class="acc-in" ${focusKey?"open":""}><summary>ألوان التجويد في ورد اليوم <span class="small muted">اضغط حكماً لإبرازه في الآيات</span></summary><div class="row" id="chips">${ruleChips(verses)}</div></details>
     <div class="mushaf"><div class="mushaf-in"><div class="qtext ${mode==="plain"?"plain":""} ${focusKey?"focus":""}" id="qtext" style="--qsize:${S.prefs.size}rem">${mushafHTML(verses)}</div></div></div>
     <div id="vtools"></div>
   </section>
@@ -2179,8 +2208,9 @@ function nextPrayer(now){
   const t = dayTimes(now);
   for (const k of PRAYERS) if (t[k] > now) return {k, at:t[k], today:t};
   const tm = new Date(now); tm.setDate(tm.getDate()+1);
-  return {k:"fajr", at:dayTimes(tm).fajr, today:t};
+  return {k:"fajr", at:dayTimes(tm).fajr, today:t, tomorrow:true};
 }
+const npName = n => PNAMES[n.k] + (n.tomorrow ? " غداً" : "");
 function currentPrayer(now, t){ let cur = null; for (const k of PRAYERS) if (t[k] <= now) cur = k; if (cur==="fajr" && now >= t.sunrise) cur = null; return cur; }
 function hijri(d){ try { return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric"}).format(d); } catch(e){ return ""; } }
 function greg(d){ try { return new Intl.DateTimeFormat("ar",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(d); } catch(e){ return d.toDateString(); } }
@@ -2271,7 +2301,7 @@ function remindAdhkar(kind){
 function updateClocks(now){
   const n = nextPrayer(now);
   const s = $("#pstrip");
-  if (s) s.innerHTML = `<button class="pstrip" data-goprayer>${ic("mosque")}<span>الصلاة القادمة: <b>${PNAMES[n.k]}</b> ${hm(n.at)}</span><span class="cd num">بعد ${dur(n.at-now)}</span></button>`;
+  if (s) s.innerHTML = `<button class="pstrip" data-goprayer>${ic("mosque")}<span>الصلاة القادمة: <b>${npName(n)}</b> ${hm(n.at)}</span><span class="cd num">بعد ${dur(n.at-now)}</span></button>`;
   const c = $("#pnextCd"); if (c) c.textContent = dur(n.at-now);
 }
 document.addEventListener("click", e=>{ if (e.target.closest("[data-goprayer]")) setTab("prayer"); });
@@ -2289,9 +2319,9 @@ function renderPrayer(){
   const customSel = p.city && p.city.custom;
   $("#view").innerHTML = `<div class="wrap" style="gap:16px">
     <section class="pnext">${skySVG()}
-      <div><span class="eyebrow">${ic("pin")} ${c.name}${c.guess?" (تقديري، اختر مدينتك بالأسفل)":""}</span>
+      <div><span class="eyebrow">${ic("pin")} ${c.name}${c.guess?` <button class="linkbtn" id="pickCity">(تقديري، اضغط لاختيار مدينتك)</button>`:""}</span>
         <div class="pd">${greg(now)}<br><span class="hij">${hijri(now)}</span></div></div>
-      <div class="pbig"><span>الصلاة القادمة</span><b>${PNAMES[n.k]} <span class="num">${hm(n.at)}</span></b><span>بعد <span class="num" id="pnextCd">${dur(n.at-now)}</span></span></div>
+      <div class="pbig"><span>الصلاة القادمة</span><b>${npName(n)} <span class="num">${hm(n.at)}</span></b><span>بعد <span class="num" id="pnextCd">${dur(n.at-now)}</span></span></div>
     </section>
     <section class="panel"><div class="spread"><div class="ph"><span class="badge">${ic("clock")}</span><h2>مواقيت اليوم</h2></div><span class="small muted">${METHODS[methodNow()].n.split(" (")[0]}</span></div>
       <div class="ptimes">${rows}</div>
@@ -2395,7 +2425,7 @@ function renderPrayer(){
   };
   $("#prMethod").onchange = e=>{ if (!P.city){ const c = cityNow(); P.city = {name:c.name, lat:c.lat, lng:c.lng}; } P.method = e.target.value; save(); renderPrayer(); };
   $("#prAsr").onchange = e=>{ P.asr = +e.target.value; save(); renderPrayer(); };
-  document.querySelectorAll("[data-adj]").forEach(b=>b.onclick=()=>{ const k = b.dataset.adj; P.adj[k] = Math.max(-30, Math.min(30, (P.adj[k]||0) + +b.dataset.d)); save(); renderPrayer(); const d = $("details", $("#view")); if (d) d.open = true; });
+  document.querySelectorAll("[data-adj]").forEach(b=>b.onclick=()=>{ const k = b.dataset.adj; P.adj[k] = Math.max(-30, Math.min(30, (P.adj[k]||0) + +b.dataset.d)); save(); renderPrayer(); const d = [...document.querySelectorAll("#view details")].find(x=>!x.classList.contains("accd") && x.querySelector("[data-adj]")); if (d) d.open = true; });
 }
 
 /* ----- morning & evening adhkar ----- */
@@ -2952,6 +2982,7 @@ function renderBnav(){
   $("#bnMore").onclick = ()=>{ buzz(); openMore(); };
 }
 
+const ayaN = n => n===1 ? "آية واحدة" : n===2 ? "آيتان" : n<=10 ? AR(n)+" آيات" : AR(n)+" آية";
 function openSheet(html){ $("#shBody").innerHTML = html; $("#sheet").hidden = false; document.body.classList.add("sheet-open"); requestAnimationFrame(()=>$("#sheet").classList.add("on")); }
 function closeSheet(){ const s = $("#sheet"); s.classList.remove("on"); document.body.classList.remove("sheet-open"); setTimeout(()=>{ s.hidden = true; }, 220); }
 function openMore(){
@@ -3071,7 +3102,7 @@ function renderSurahs(){
     <div class="slist">${shown.map(s=>{ const pr = surProgress(s.n), cur = s.n===SUR;
       return `<button class="scard ${cur?"cur":""}" data-sur="${s.n}">
         <span class="snum">${AR(s.n)}</span>
-        <span class="sbody"><b>${s.name}</b><small>${AR(s.ayat)} آية · ${s.pages<1?"أقل من صفحة":"نحو "+AR(Math.round(s.pages))+" "+(s.pages>=2.5&&s.pages<10.5?"صفحات":"صفحة")} · ${s.type}</small>
+        <span class="sbody"><b>${s.name}</b><small>${ayaN(s.ayat)} · ${s.pages<1?"أقل من صفحة":"نحو "+AR(Math.round(s.pages))+" "+(s.pages>=2.5&&s.pages<10.5?"صفحات":"صفحة")} · ${s.type}</small>
         ${pr?`<span class="sbar"><i style="width:${Math.round(pr.pct*100)}%"></i></span>`:""}</span>
         <span class="stag">${cur?`<span class="chip on">الحالية</span>`:pr?(pr.done?`<span class="chip okc">خُتمت</span>`:`<span class="chip">${AR(Math.round(pr.pct*100))}٪</span>`):""}</span>
       </button>`; }).join("") || `<p class="muted">لا توجد سورة بهذا الاسم.</p>`}</div>
@@ -3085,7 +3116,7 @@ function openSurah(n, pace){
   const curPace = pace || (x && x.pace) || defaultPace(n), rec = defaultPace(n);
   const opts = PACES.filter(([p])=> p<=Math.max(0.5, s.pages) ).map(([p,l])=>{ const d = planDays(n,p); return {p,l,d}; });
   openSheet(`<div class="sur-h"><span class="snum big">${AR(n)}</span><div><h2 id="shTitle">سورة ${s.name}</h2>
-      <div class="small muted">${AR(s.ayat)} آية · ${s.type} · الصفحات ${AR(s.p1)}${s.p2!==s.p1?"–"+AR(s.p2):""} · الجزء ${AR(s.j1)}${s.j2!==s.j1?"–"+AR(s.j2):""}</div></div></div>
+      <div class="small muted">${ayaN(s.ayat)} · ${s.type} · الصفحات ${AR(s.p1)}${s.p2!==s.p1?"–"+AR(s.p2):""} · الجزء ${AR(s.j1)}${s.j2!==s.j1?"–"+AR(s.j2):""}</div></div></div>
     <div><b>كم تحفظ كل يوم؟</b><div class="paces">${opts.map(o=>`<button class="pace ${o.p===curPace?"on":""}" data-pace="${o.p}"><b>${o.l}</b><small>${daysAr(o.d.days)}</small>${o.p===rec?`<span class="rec">مقترح</span>`:""}</button>`).join("")}</div>
       <p class="small muted" style="margin-top:6px">الخطة: ${daysAr(planDays(n,curPace).news)} للحفظ، مع أيام مراجعة بعد كل خمسة أيام، وتسميع السورة كاملة في آخرها.</p></div>
     <p class="small muted">${n===2?"تلاوة الحصري لهذه السورة مضمّنة في التطبيق.":`تلاوة الحصري لهذه السورة نحو ${mbAr(AUDIO_MB[n])} ميغابايت، تُجلب عند الاستماع أول مرة، ويمكنك تحميلها كلها من «تقدّمي» لتعمل بدون إنترنت.`}</p>
@@ -3596,7 +3627,7 @@ function fastUpcoming(){
   return out.slice(0, 7);
 }
 function fastPanelHTML(){
-  const p = PP(), up = fastUpcoming(), h = hp(new Date()), when = i=> i===0?"اليوم":i===1?"غداً":i<=10?`بعد ${AR(i)} أيام`:`بعد ${AR(i)} يوماً`;
+  const p = PP(), up = fastUpcoming(), h = hp(new Date()), when = i=> i===0?"اليوم":i===1?"غداً":i===2?"بعد يومين":i<=10?`بعد ${AR(i)} أيام`:`بعد ${AR(i)} يوماً`;
   const keys = [...new Set(up.flatMap(u=>u.r.map(x=>x.k)))];
   return `<section class="panel" id="fastPanel"><div class="ph"><span class="badge gold">${ic("moon")}</span><h2>صيام التطوع</h2></div>
     ${h?`<p class="small muted">اليوم ${AR(h.d)} ${HMONTHS[h.m-1]} ${AR(h.y)} هـ حسب تقويم أم القرى، وقد يختلف يوماً عن رؤية الهلال في بلدك.</p>`:""}
@@ -3687,7 +3718,7 @@ function renderHome(){
   const nf = fastUpcoming()[0];
   const rows = ["fajr","sunrise","dhuhr","asr","maghrib","isha"].map(x=>`<div class="hpt ${x===n.k?"next":""}"><span>${PNAMES[x]}</span><b class="num">${hm(t[x])}</b></div>`).join("");
   const memo = PLAN[currentDay()-1], memDone = Object.values(S.done||{}).includes(todayStr());
-  const tile = (go, hue, icon, title, sub, extra)=>`<button class="htile" data-hgo="${go}" style="--hue:${hue}"><span class="hti">${ic(icon)}</span><b>${title}</b>${extra||""}<small>${sub}</small></button>`;
+  const tile = (go, hue, icon, title, sub)=>`<button class="htile" data-hgo="${go}" style="--hue:${hue}"><span class="hti">${ic(icon)}</span><b>${title}</b><small>${sub}</small></button>`;
   $("#view").innerHTML = `<div class="wrap home" style="gap:16px">
     <h2 class="hsec">عبادات اليوم</h2>
     <div class="hduo">
@@ -3704,7 +3735,7 @@ function renderHome(){
     ${(()=>{ const L = Object.entries(BMK()).sort((x,y)=>y[1].at-x[1].at); if (!L.length) return "";
       return `<div class="hbms">${L.map(([k,b])=>`<button class="hbm" data-hbm="${k}"><span class="hti" style="--hue:45">${ic("star")}</span><div><small>علامة ${BM_NAME[k]}</small><b>${bmLabel(b)}</b></div><span class="hmc">${ic("next")}</span></button>`).join("")}</div>`; })()}
     <button class="hpray" data-hgo="prayer">
-      <div class="hp-top"><div><span class="small muted">الصلاة القادمة</span><b class="hpn">${PNAMES[n.k]} <span class="num">${hm(n.at)}</span></b></div>
+      <div class="hp-top"><div><span class="small muted">الصلاة القادمة</span><b class="hpn">${npName(n)} <span class="num">${hm(n.at)}</span></b></div>
         <div class="hp-cd"><span class="small muted">بعد</span><b class="num" id="hmCd">${dur(n.at-now)}</b></div></div>
       <div class="hpts">${rows}</div>
       <div class="hp-f small"><span>${ic("check")} صلواتي اليوم <b class="num">${AR(fN)}/٥</b></span><span class="muted">${hijri(now)}</span></div>
@@ -3712,20 +3743,26 @@ function renderHome(){
     <button class="hmemo" data-hgo="today"><span class="hti" style="--hue:155">${ic("book")}</span>
       <div><b>حفظ سورة ${DATA.name}</b><small>${!S.start ? "لم تبدأ الخطة بعد، اضغط للبدء" : memo ? `اليوم ${AR(memo.day)} من ${AR(PLAN.length)}${memDone?" · أتممت ورد اليوم":""}` : "أتممت خطة السورة"}</small></div>
       <span class="hmc">${ic(memDone?"check":"next")}</span></button>
-    <h2 class="hsec">استكشف</h2>
+    <h2 class="hsec">القرآن الكريم</h2>
     <div class="hgrid">
-      ${tile("mushaf", 45, "quran", "المصحف", "القراءة والبحث", S.mq&&S.mq.p?`<span class="hval">صفحة ${AR(S.mq.p)}</span>`:"")}
-      ${tile("tasbih", 95, "beads", "المسبحة", "تسبيحة اليوم", `<span class="hnum num">${AR(tbToday())}</span>`)}
-      ${tile("hijri", 215, "calendar", "التقويم الهجري", ram>0 ? `رمضان بعد ${AR(ram)} يوماً` : ram===0 ? "اليوم أول رمضان" : "", h?`<span class="hval">${AR(h.d)} ${HMONTHS[h.m-1]}</span>`:"")}
-      ${tile("fast", 30, "moon", "صيام التطوع", nf ? `${nf.i===0?"اليوم":nf.i===1?"غداً":"بعد "+AR(nf.i)+" أيام"}` : "", nf?`<span class="hval">${nf.r.map(x=>x.t).join("، ")}</span>`:"")}
-      ${tile("pl", 155, "mosque", "صلواتي", "الفرائض والسنن", `<span class="hnum num">${AR(fN)}/٥</span>`)}
-      ${tile("r", 265, "shield", "الرقية والتحصين", "من السحر والعين", "")}
-      ${tile("y", 200, "sun", "اليوم والليلة", "أذكار المواقف اليومية", "")}
-      ${tile("p", 175, "mosque", "أذكار الصلاة", "بعد السلام", "")}
-      ${tile("f", 150, "friday", "الجمعة", new Date().getDay()===5 ? "اليوم الجمعة" : "سننها وأذكارها", "")}
-      ${tile("j", 340, "heart", "الأدعية", "من القرآن والسنة", "")}
-      ${tile("qibla", 45, "qibla", "القبلة", "اتجاه مكة من موقعك", "")}
-      ${tile("sermons", 10, "play", "دروس ومواعظ", "محاضرات ومقالات", "")}
+      ${tile("mushaf", 45, "quran", "المصحف", S.mq&&S.mq.p ? `تابع من ص ${AR(S.mq.p)}` : "القراءة والبحث")}
+      ${tile("surahs", 120, "list", "سور الحفظ", "اختر سورة")}
+      ${tile("sermons", 10, "play", "دروس ومواعظ", "محاضرات ومقالات")}
+    </div>
+    <h2 class="hsec">الأذكار والأدعية</h2>
+    <div class="hgrid">
+      ${tile("y", 200, "sun", "اليوم والليلة", "أذكار المواقف")}
+      ${tile("p", 175, "mosque", "بعد الصلاة", "أذكار السلام")}
+      ${tile("f", 150, "friday", "الجمعة", new Date().getDay()===5 ? "اليوم الجمعة" : "سنن وأذكار")}
+      ${tile("r", 265, "shield", "الرقية", "التحصين والعلاج")}
+      ${tile("j", 340, "hands", "الأدعية", "من القرآن والسنة")}
+      ${tile("tasbih", 95, "beads", "المسبحة", tbToday() ? `اليوم ${AR(tbToday())}` : "ابدأ التسبيح")}
+    </div>
+    <h2 class="hsec">الصلاة والصيام</h2>
+    <div class="hgrid">
+      ${tile("pl", 155, "check", "صلواتي", `اليوم ${AR(fN)}/٥`)}
+      ${tile("fast", 30, "moon", "صيام التطوع", nf ? `${nf.i===0?"اليوم":nf.i===1?"غداً":nf.i===2?"بعد يومين":"بعد "+AR(nf.i)+(nf.i<=10?" أيام":" يوماً")}` : "الأيام المسنونة")}
+      ${tile("qibla", 45, "qibla", "القبلة", "اتجاه مكة")}
     </div>
   </div>`;
   $("#view").onclick = e=>{ const m = e.target.closest("[data-hbm]"); if (m){ goBm(m.dataset.hbm); return; }
@@ -3914,7 +3951,7 @@ function renderMushaf(){
     </section>
     <div id="mqRes"></div>
     <div id="mqIdx"><div class="seg" role="tablist"><button class="${mqView==="sur"?"on":""}" data-mv="sur">السور</button><button class="${mqView==="juz"?"on":""}" data-mv="juz">الأجزاء</button></div>
-    <div class="mlist">${mqView==="sur" ? Array.from({length:114},(_,i)=>i+1).map(s=>{ const x = QALL.surahs[s]; return `<button class="mrow" data-mp="${x.verses[0].p}"><span class="mn num">${AR(s)}</span><span class="mt"><b>${x.name}</b><small>${x.type==="medinan"||x.type==="مدنية"?"مدنية":"مكية"} · ${AR(x.verses.length)} آية</small></span><span class="small muted num">ص ${AR(x.verses[0].p)}</span></button>`; }).join("")
+    <div class="mlist">${mqView==="sur" ? Array.from({length:114},(_,i)=>i+1).map(s=>{ const x = QALL.surahs[s]; return `<button class="mrow" data-mp="${x.verses[0].p}"><span class="mn num">${AR(s)}</span><span class="mt"><b>${x.name}</b><small>${x.type==="medinan"||x.type==="مدنية"?"مدنية":"مكية"} · ${ayaN(x.verses.length)}</small></span><span class="small muted num">ص ${AR(x.verses[0].p)}</span></button>`; }).join("")
       : juzStart.map(([j,p])=>`<button class="mrow" data-mp="${p}"><span class="mn num">${AR(j)}</span><span class="mt"><b>الجزء ${AR(j)}</b><small>يبدأ من ${pageFirst(p)}</small></span><span class="small muted num">ص ${AR(p)}</span></button>`).join("")}</div></div>
   </div>`;
   const inp = $("#mq"), res = $("#mqRes"), idx = $("#mqIdx");
@@ -4109,6 +4146,50 @@ function bindWidget(){
 }
 const _rp1 = renderPrayer;
 renderPrayer = function(){ _rp1(); window.__wg = widgetCode; const f = $("#fastPanel"); if (f && !$("#wgPanel")){ f.insertAdjacentHTML("afterend", widgetPanelHTML()); bindWidget(); } };
+/* ----- 2026-11 polish: icons, prayer page grouped into collapsible sections ----- */
+Object.assign(ICONS, {hands:'<path d="M8 21v-5l-3-4V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M16 21v-5l3-4V6.5a1.5 1.5 0 0 0-3 0V11"/><path d="M8 11l2.2-6.3a1.3 1.3 0 0 1 2.5.6L11 12M16 11l-2.2-6.3a1.3 1.3 0 0 0-2.5.6"/>'});
+const ACC_OPEN = new Set();
+function accSub(t){
+  const p = PP();
+  if (/المدينة/.test(t)) return `${cityNow().name} · ${(METHODS[methodNow()]||{n:""}).n.split(" (")[0]}`;
+  if (/التنبيهات والأذان/.test(t)) return p.adhan ? `الأذان مفعّل${p.pre?` · تذكير قبلها بـ${p.pre} دقيقة`:""}` : "الأذان متوقف";
+  if (/منبّه الصباح/.test(t)){ const w = WP(); return [w.remWake?`الاستيقاظ ${w.wakeAt}`:"", w.remLeave?`الخروج ${w.leaveAt}`:""].filter(Boolean).join(" · ") || "متوقف"; }
+  if (/قيام الليل/.test(t)) return "الثلث الأخير وساعة الجمعة";
+  if (/ودجت/.test(t)) return "مواقيت الصلاة على شاشة الآيفون";
+  if (/صيام/.test(t)){ const f = fastUpcoming()[0]; return f ? `${f.i===0?"اليوم":f.i===1?"غداً":f.i===2?"بعد يومين":"بعد "+AR(f.i)+(f.i<=10?" أيام":" يوماً")}: ${f.r.map(x=>x.t).join("، ")}` : "الأيام المسنونة"; }
+  return "";
+}
+function accordionize(sec, startOpen){
+  if (!sec || sec.querySelector(":scope > details.accd")) return;
+  const ph = sec.querySelector(":scope > .ph, :scope > .spread"); if (!ph) return;
+  const t = (sec.querySelector("h2")||{}).textContent || "";
+  const d = document.createElement("details"); d.className = "accd"; d.open = ACC_OPEN.has(t) || !!startOpen;
+  const s = document.createElement("summary"); s.className = "acc-s";
+  s.appendChild(ph); const sub = accSub(t); if (sub) s.insertAdjacentHTML("beforeend", `<span class="acc-sub small muted">${sub}</span>`);
+  s.insertAdjacentHTML("beforeend", `<span class="acc-chev">${ic("next")}</span>`);
+  const body = document.createElement("div"); body.className = "acc-b";
+  while (sec.firstChild) body.appendChild(sec.firstChild);
+  d.appendChild(s); d.appendChild(body); sec.appendChild(d); sec.classList.add("acc");
+  d.addEventListener("toggle", ()=>{ if (d.open) ACC_OPEN.add(t); else ACC_OPEN.delete(t); });
+}
+const _rpPolish = renderPrayer;
+renderPrayer = function(){
+  const y = window.scrollY; _rpPolish();
+  const wrap = $("#view .wrap"); if (!wrap) return;
+  const secs = [...wrap.querySelectorAll(":scope > section.panel")], byT = re => secs.find(s=>re.test((s.querySelector("h2")||{}).textContent||""));
+  const fast = byT(/صيام/), qibla = byT(/القبلة/), rank = byT(/منزلة/);
+  const sets = [byT(/المدينة/), byT(/التنبيهات والأذان/), byT(/منبّه الصباح/), byT(/قيام الليل/), byT(/ودجت/)].filter(Boolean);
+  const head = (txt, id)=>{ const h = document.createElement("h2"); h.className = "hsec"; h.id = id; h.textContent = txt; return h; };
+  if (qibla) wrap.appendChild(qibla);
+  if (fast){ wrap.appendChild(head("الصيام", "secFast")); wrap.appendChild(fast); accordionize(fast); }
+  if (sets.length){ wrap.appendChild(head("الإعدادات والتنبيهات", "secSet")); sets.forEach(s=>{ wrap.appendChild(s); accordionize(s, /المدينة/.test(s.querySelector("h2").textContent) && !PP().city); }); }
+  if (rank) wrap.appendChild(rank);
+  const pc = $("#pickCity"); if (pc) pc.onclick = ()=>{ const c = sets[0]; if (!c) return; const d = c.querySelector("details.accd"); if (d) d.open = true; c.scrollIntoView({behavior:"smooth", block:"start"}); };
+  if (y) window.scrollTo(0, y);
+};
+// home quick links to sections that now sit inside collapsible panels
+const _openPanel = id => { const x = $(id); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); };
+document.addEventListener("click", e=>{ const b = e.target.closest('[data-hgo="fast"]'); if (b) setTimeout(()=>_openPanel("#fastPanel"), 120); }, true);
 buildTestOrder(PLAN[viewDay-1]);
 render();
 })();

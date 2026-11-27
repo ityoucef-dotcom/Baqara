@@ -58,6 +58,7 @@ openMore = function(){
   const G = [
     ["القرآن الكريم", [["mushaf","المصحف","quran"],["khatma","ختمة القرآن","book"],["surahs","سور الحفظ","list"],["plan","خطة الحفظ","calendar"],["rules","أحكام التجويد","palette"],["method","طريقة الحفظ","compass"]]],
     ["العبادات اليومية", [["muhasaba","المحاسبة اليومية","check"],["prayer","الصلاة والأذان","mosque"],["adhkar","الأذكار","beads"],["tasbih","السبحة","beads"],["qibla","القبلة","qibla"],["fast","صيام التطوع","moon"]]],
+    ["العلم الشرعي", [["library","المكتبة","library"],["lib-hadith","كتب الحديث","scroll"],["lib-mine","ملاحظاتي","pen"]]],
     ["المزيد", [["stats","تقدّمي","chart"],["sermons","دروس ومواعظ","play"],["settings","الإعدادات","gear"]]],
   ];
   openSheet(`<h2 id="shTitle">المزيد</h2>${G.map(([t,L])=>`<div class="mg"><h3 class="mg-h">${t}</h3><div class="tiles">${L.map(([k,n,i])=>`<button class="tile ${tab===k?"on":""}" data-go2="${k}"><span class="ti">${ic(i)}</span>${n}</button>`).join("")}</div></div>`).join("")}`);
@@ -65,6 +66,7 @@ openMore = function(){
     if (g==="settings") return openSettings();
     closeSheet();
     if (g==="tasbih"){ adkTab = "t"; setTab("adhkar"); }
+    else if (g.startsWith("lib")){ if (typeof LB!=="undefined"){ LB.view = "home"; LB.seg = g==="lib-hadith" ? "hadith" : g==="lib-mine" ? "mine" : "books"; } setTab("library"); }
     else if (g==="qibla" || g==="fast"){ setTab("prayer"); setTimeout(()=>{ const x = g==="fast" ? $("#fastPanel") : [...document.querySelectorAll("#view h2")].find(h=>/القبلة/.test(h.textContent))?.closest("section"); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); }, 80); }
     else setTab(g); });
 };

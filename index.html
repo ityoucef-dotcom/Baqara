@@ -4275,6 +4275,13 @@ renderPrayer = function(){
 // home quick links to sections that now sit inside collapsible panels
 const _openPanel = id => { const x = $(id); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); };
 document.addEventListener("click", e=>{ const b = e.target.closest('[data-hgo="fast"]'); if (b) setTimeout(()=>_openPanel("#fastPanel"), 120); }, true);
+/*<<android>>*/
+/* Android app: same native alarm bridge as iOS, with Android wording */
+if (window.NATIVE_APP && window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()==="android"){
+  const _npAnd = nativePanelHTML;
+  nativePanelHTML = function(){ return _npAnd().replace(/<p class="small">[\s\S]*?<\/p>/, `<p class="small">على أندرويد يُرفع الأذان كاملاً في وقته ولو كان التطبيق مغلقاً والهاتف مقفلاً، ويمكن إيقافه من الإشعار. «منبّه يرنّ» يُسمع ولو كان الهاتف على الصامت.</p>`); };
+}
+/*<</android>>*/
 /*<<islamic>>*/
 /* ----- Islamic visual layer + practical "now" card + grouped "more" menu ----- */
 Object.assign(ICONS, {

@@ -1149,6 +1149,51 @@ section.panel.acc{padding:0;overflow:hidden}
 .mh-home .hbar{display:block;margin-top:6px}
 .mh-gh .tagc{font-size:.7rem;padding:2px 8px}
 /*<</muhasaba-css>>*/
+/*<<islamic-css>>*/
+/* Islamic visual layer */
+:root{ --isl-pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%230d6a50' stroke-opacity='.07' stroke-width='1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --isl-pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23d4b064' stroke-opacity='.06' stroke-width='1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E"); } }
+:root[data-theme="dark"]{ --isl-pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23d4b064' stroke-opacity='.06' stroke-width='1'%3E%3Cpath d='M28 6l6.4 15.6L50 28l-15.6 6.4L28 50l-6.4-15.6L6 28l15.6-6.4z'/%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E"); }
+body{ background-image:var(--isl-pat); background-attachment:fixed }
+.isl-hero{ position:relative; overflow:hidden; color:#fff; padding:34px 16px 0; border-radius:150px 150px 22px 22px / 64px 64px 22px 22px;
+  background:radial-gradient(120% 70% at 50% 0%, #1f8a67 0%, #0d5c45 55%, #083d2f 100%); box-shadow:0 10px 28px -14px rgba(8,61,47,.7);
+  border:1px solid rgba(212,176,100,.45) }
+.isl-hero::before{ content:""; position:absolute; inset:0; opacity:.5; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23ffd98a' stroke-opacity='.18' stroke-width='.8'%3E%3Cpath d='M22 4l5 13 13 5-13 5-5 13-5-13-13-5 13-5z'/%3E%3Crect x='12.5' y='12.5' width='19' height='19' transform='rotate(45 22 22)'/%3E%3C/g%3E%3C/svg%3E") }
+.isl-hero::after{ content:""; position:absolute; inset:7px 7px auto; height:calc(100% - 14px); pointer-events:none; border:1px solid rgba(255,217,138,.28);
+  border-radius:144px 144px 17px 17px / 58px 58px 17px 17px }
+.isl-hero .sky{ position:relative; display:block; width:calc(100% + 32px); margin:6px -16px 0; height:auto; color:rgba(0,0,0,.28) }
+.isl-lan{ position:absolute; top:-6px; width:22px; color:#e8c46e; filter:drop-shadow(0 0 6px rgba(255,211,107,.55)); animation:islSway 5s ease-in-out infinite; transform-origin:50% 0 }
+.isl-lan.l1{ inset-inline-start:15% } .isl-lan.l2{ inset-inline-end:15%; top:-16px; animation-delay:-2.5s }
+@keyframes islSway{ 0%,100%{ transform:rotate(3deg) } 50%{ transform:rotate(-3deg) } }
+@media (prefers-reduced-motion: reduce){ .isl-lan{ animation:none } }
+.isl-in{ position:relative; text-align:center; display:grid; gap:3px }
+.isl-salam{ font-size:.82rem; color:#f3dfa8; letter-spacing:.2px }
+.isl-greet{ font-size:1.45rem; font-weight:800 }
+.isl-date{ font-size:.82rem; opacity:.85 } .isl-date .hij{ color:#f3dfa8 }
+.isl-now{ position:relative; display:grid; gap:8px; margin-top:14px }
+.isl-nowh{ display:flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700; color:#f3dfa8 }
+.isl-nowh .ic{ width:14px; height:14px }
+.isl-act{ display:flex; align-items:center; gap:10px; width:100%; text-align:start; color:inherit; font:inherit; cursor:pointer;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:9px 10px; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px) }
+.isl-act:active{ transform:scale(.985); background:rgba(255,255,255,.16) }
+.isl-act .hti{ background:rgba(255,217,138,.18); color:#ffe2a0; width:36px; height:36px; border-radius:11px; display:grid; place-items:center; flex:none }
+.isl-act .hti .ic{ width:20px; height:20px }
+.isl-at{ flex:1; min-width:0; display:grid; gap:1px } .isl-at b{ font-size:.95rem } .isl-at small{ font-size:.76rem; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.isl-act > .ic:last-child{ width:16px; height:16px; opacity:.6 }
+/* ornamented section headings */
+.hsec{ display:flex; align-items:center; gap:10px }
+.hsec::before{ content:""; width:13px; height:13px; flex:none; background:var(--gold); -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l3.2 4.3L20.5 4l-1.3 5.3L23 12l-3.8 2.7 1.3 5.3-5.3-1.3L12 23l-3.2-4.3L3.5 20l1.3-5.3L1 12l3.8-2.7L3.5 4l5.3 1.3z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l3.2 4.3L20.5 4l-1.3 5.3L23 12l-3.8 2.7 1.3 5.3-5.3-1.3L12 23l-3.2-4.3L3.5 20l1.3-5.3L1 12l3.8-2.7L3.5 4l5.3 1.3z'/%3E%3C/svg%3E") center/contain no-repeat }
+.hsec::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--gold), transparent); opacity:.45 }
+/* panels: a thin gold inner arch hint on headers */
+.ph .badge{ border-radius:10px 10px 6px 6px / 14px 14px 6px 6px }
+/* grouped "more" sheet */
+.mg + .mg{ margin-top:14px }
+.mg-h{ display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--muted); margin:0 2px 8px; font-weight:700 }
+.mg-h::before{ content:""; width:11px; height:11px; flex:none; background:var(--gold); -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l3.2 4.3L20.5 4l-1.3 5.3L23 12l-3.8 2.7 1.3 5.3-5.3-1.3L12 23l-3.2-4.3L3.5 20l1.3-5.3L1 12l3.8-2.7L3.5 4l5.3 1.3z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l3.2 4.3L20.5 4l-1.3 5.3L23 12l-3.8 2.7 1.3 5.3-5.3-1.3L12 23l-3.2-4.3L3.5 20l1.3-5.3L1 12l3.8-2.7L3.5 4l5.3 1.3z'/%3E%3C/svg%3E") center/contain no-repeat }
+.mg-h::after{ content:""; flex:1; height:1px; background:var(--line) }
+.tile .ti{ border-radius:12px 12px 8px 8px / 16px 16px 8px 8px }
+/*<</islamic-css>>*/
 </style>
 
 <div class="wrap">
@@ -4230,6 +4275,80 @@ renderPrayer = function(){
 // home quick links to sections that now sit inside collapsible panels
 const _openPanel = id => { const x = $(id); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); };
 document.addEventListener("click", e=>{ const b = e.target.closest('[data-hgo="fast"]'); if (b) setTimeout(()=>_openPanel("#fastPanel"), 120); }, true);
+/*<<islamic>>*/
+/* ----- Islamic visual layer + practical "now" card + grouped "more" menu ----- */
+Object.assign(ICONS, {
+  mosque:'<path d="M12 2.5v1.8"/><path d="M12 4.3c-1.2.9-1.8 1.9-1.6 2.9h3.2c.2-1-.4-2-1.6-2.9z"/><path d="M7 12.2a5 5 0 0 1 10 0"/><path d="M6.5 12.2h11v8.3h-11z"/><path d="M10.5 20.5v-2.8a1.5 1.5 0 0 1 3 0v2.8"/><path d="M3.2 20.5V9.5l1-1.6 1 1.6v11M18.8 20.5V9.5l1-1.6 1 1.6v11"/><path d="M2 20.5h20"/>',
+  quran:'<path d="M12 7.2C10.2 6 7.6 5.5 4.5 5.7v8.6c3.1-.2 5.7.3 7.5 1.5 1.8-1.2 4.4-1.7 7.5-1.5V5.7c-3.1-.2-5.7.3-7.5 1.5zM12 7.2v8.6"/><path d="M5 21l14-4.6M19 21L5 16.4"/>',
+  beads:'<circle cx="15.3" cy="13.5" r="1.25"/><circle cx="17.3" cy="10.7" r="1.25"/><circle cx="17.3" cy="7.3" r="1.25"/><circle cx="15.3" cy="4.5" r="1.25"/><circle cx="12.0" cy="3.4" r="1.25"/><circle cx="8.7" cy="4.5" r="1.25"/><circle cx="6.7" cy="7.3" r="1.25"/><circle cx="6.7" cy="10.7" r="1.25"/><circle cx="8.7" cy="13.5" r="1.25"/><path d="M12 14.6v3M10.3 21.6l1.7-4 1.7 4"/>',
+  moon:'<path d="M14.5 3.6a8.4 8.4 0 1 0 6 12.6 7 7 0 0 1-6-12.6z"/><path d="M18.3 4.6l.55 1.25 1.25.55-1.25.55-.55 1.25-.55-1.25-1.25-.55 1.25-.55z"/>',
+  qibla:'<path d="M4 8l8-4 8 4v9.2l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v9.2"/><path d="M4 10.6l8 4 8-4"/>',
+  hands:'<path d="M8 21v-5l-3-4V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M16 21v-5l3-4V6.5a1.5 1.5 0 0 0-3 0V11"/><path d="M8 11l2.2-6.3a1.3 1.3 0 0 1 2.5.6L11 12M16 11l-2.2-6.3a1.3 1.3 0 0 0-2.5.6"/>',
+  friday:'<rect x="5.6" y="5.6" width="12.8" height="12.8" rx="1"/><rect x="5.6" y="5.6" width="12.8" height="12.8" rx="1" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="2.4"/>',
+  lantern:'<path d="M12 1.8v2"/><path d="M10.2 3.8h3.6l1.2 2.6H9z"/><path d="M9 6.4h6l1.6 2.6v7.6L15 19H9l-1.6-2.4V9z"/><path d="M7.4 9h9.2M7.4 16.6h9.2"/><path d="M12 10.8c-1.1 1.1-1.1 2.8 0 3.9 1.1-1.1 1.1-2.8 0-3.9z"/><path d="M12 19v2.6"/>',
+  mihrab:'<path d="M5 21V11a7 7 0 0 1 14 0v10"/><path d="M8.8 21v-6.5a3.2 3.2 0 0 1 6.4 0V21"/><path d="M3 21h18"/><path d="M12 2.5v1.5"/>',
+  mat:'<path d="M5.5 2.5h13v19h-13z"/><path d="M9 21.5v-6.3a3 3 0 0 1 6 0v6.3"/><path d="M5.5 5.5h13M8 2.5v3M12 2.5v3M16 2.5v3"/>',
+  calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M13.6 12.4a3 3 0 1 0 1.8 4.6 2.4 2.4 0 0 1-1.8-4.6z"/>',
+  dome:'<path d="M12 2.5v2"/><path d="M5 13a7 7 0 0 1 14 0"/><path d="M4 13h16v8H4z"/><path d="M10 21v-3.5a2 2 0 0 1 4 0V21"/>',
+});
+const LANTERN_SVG = c=>`<svg class="isl-lan ${c}" viewBox="0 0 40 110" aria-hidden="true"><path d="M20 0v34" stroke="currentColor" stroke-width="1"/><path d="M14 34h12l3 7H11z" fill="currentColor" opacity=".9"/><path d="M11 41h18l4 8v26l-4 7H11l-4-7V49z" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1.3"/><path d="M7 49h26M7 75h26M15 41v41M25 41v41" stroke="currentColor" stroke-width=".9" opacity=".7"/><path d="M20 53c-3.4 3.4-3.4 9 0 12.4 3.4-3.4 3.4-9 0-12.4z" fill="#ffd36b"/><path d="M14 82h12l-6 9z" fill="currentColor" opacity=".9"/><path d="M20 91v8" stroke="currentColor" stroke-width="1"/><circle cx="20" cy="101" r="2" fill="currentColor"/></svg>`;
+/* what is recommended right now: up to three actions, each one tap away */
+function nowActions(){
+  const now = new Date(), t = dayTimes(now), out = [], P = (S.pl||{})[todayStr()]||{}, fri = now.getDay()===5;
+  const add = (icon, title, sub, fn, hue)=>out.push({icon, title, sub, fn, hue});
+  const adk = k=>()=>{ adkTab = k; setTab("adhkar"); };
+  let n; try { n = upcomingNight(now); } catch(e){}
+  if (n && now >= n.third && now < n.end) add("lantern", "الثلث الأخير من الليل", "قيام الليل والدعاء، ينزل ربنا إلى السماء الدنيا", adk("j"), 40);
+  const cur = currentPrayer(now, t);
+  if (cur && now - t[cur] < 45*60000 && !mhAdkDone("p_"+cur, todayStr())) add("beads", `أذكار بعد صلاة ${PNAMES[cur]}`, "التسبيح وآية الكرسي والمعوذات", adk("p"), 175);
+  const np = nextPrayer(now), mins = Math.round((np.at - now)/60000);
+  if (mins <= 20 && mins >= 0) add("mosque", `صلاة ${npName(np)} بعد ${mins} دقيقة`, "تهيّأ وتوضّأ، والدعاء بين الأذان والإقامة لا يُرد", ()=>setTab("prayer"), 155);
+  if (now >= t.fajr && now < t.dhuhr && !adhkarDone("m")) add("sun", "أذكار الصباح", "حصّن يومك من أوله", adk("m"), 45);
+  if (now >= new Date(+t.sunrise + 20*60000) && now < new Date(+t.dhuhr - 15*60000) && !P.duha) add("mat", "صلاة الضحى", "ركعتان تجزئ عن صدقة كل مفصل", ()=>setTab("muhasaba"), 95);
+  if (fri && now < t.maghrib){ let j; try { j = jumuaHour(now); } catch(e){}
+    if (j && now >= j.start) add("hands", "ساعة الإجابة يوم الجمعة", "آخر ساعة قبل المغرب، فأكثر من الدعاء", adk("f"), 340);
+    else add("friday", "يوم الجمعة: سورة الكهف", "والإكثار من الصلاة على النبي ﷺ", ()=>{ try { openMushafAt(kahfPage(), "18:1"); } catch(e){ adk("f")(); } }, 150); }
+  if (now >= t.asr && now < t.isha && !adhkarDone("e")) add("moon", "أذكار المساء", "حصّن ليلتك قبل أن تغرب الشمس", adk("e"), 265);
+  const kh = KH(); if (kh && khToday() <= kh.days && kh.done[khToday()] !== todayStr()){ const p = khPart(khToday(), kh.days); add("quran", "ورد الختمة", `الصفحات ${AR(p.a)}–${AR(p.b)}`, ()=>setTab("khatma"), 25); }
+  if (now >= new Date(+t.isha + 60*60000) || (n && now < t.fajr && now < n.third)){ add("moon", "أذكار النوم", "آية الكرسي والمعوذات قبل أن تنام", adk("y"), 230); add("check", "حاسب نفسك", "راجع أعمال يومك في المحاسبة", ()=>setTab("muhasaba"), 150); }
+  if (!out.length) add("check", "المحاسبة اليومية", "تابع أعمال يومك", ()=>setTab("muhasaba"), 150);
+  return out.slice(0, 3);
+}
+function greetLine(){ const h = new Date().getHours(); return h < 4 ? "ليلة مباركة" : h < 12 ? "صباح الخير والبركة" : h < 17 ? "طاب يومك" : "مساء الخير والبركة"; }
+const _rhIsl = renderHome;
+renderHome = function(){ _rhIsl();
+  const wrap = $("#view .wrap.home"); if (!wrap) return;
+  const now = new Date(), h = hp(now), acts = nowActions();
+  let gd; try { gd = new Intl.DateTimeFormat("ar",{weekday:"long",day:"numeric",month:"long"}).format(now); } catch(e){ gd = ""; }
+  const first = wrap.querySelector(".hsec"); if (first) first.remove();
+  wrap.insertAdjacentHTML("afterbegin", `<section class="isl-hero">
+      ${LANTERN_SVG("l1")}${LANTERN_SVG("l2")}
+      <div class="isl-in"><span class="isl-salam">السلام عليكم ورحمة الله</span><b class="isl-greet">${greetLine()}</b>
+        <span class="isl-date">${gd} · <span class="hij">${hijri(now)}</span></span></div>
+      <div class="isl-now"><span class="isl-nowh">${ic("star")}الآن</span>
+        ${acts.map((a,i)=>`<button class="isl-act" data-now="${i}" style="--hue:${a.hue}"><span class="hti">${ic(a.icon)}</span><span class="isl-at"><b>${a.title}</b><small>${a.sub}</small></span>${ic("next")}</button>`).join("")}</div>
+      ${typeof skySVG==="function" ? skySVG() : ""}
+    </section>`);
+  wrap.querySelectorAll("[data-now]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); buzz(); acts[+b.dataset.now].fn(); }));
+};
+/* grouped "more" menu */
+openMore = function(){
+  const G = [
+    ["القرآن الكريم", [["mushaf","المصحف","quran"],["khatma","ختمة القرآن","book"],["surahs","سور الحفظ","list"],["plan","خطة الحفظ","calendar"],["rules","أحكام التجويد","palette"],["method","طريقة الحفظ","compass"]]],
+    ["العبادات اليومية", [["muhasaba","المحاسبة اليومية","check"],["prayer","الصلاة والأذان","mosque"],["adhkar","الأذكار","beads"],["tasbih","السبحة","beads"],["qibla","القبلة","qibla"],["fast","صيام التطوع","moon"]]],
+    ["المزيد", [["stats","تقدّمي","chart"],["sermons","دروس ومواعظ","play"],["settings","الإعدادات","gear"]]],
+  ];
+  openSheet(`<h2 id="shTitle">المزيد</h2>${G.map(([t,L])=>`<div class="mg"><h3 class="mg-h">${t}</h3><div class="tiles">${L.map(([k,n,i])=>`<button class="tile ${tab===k?"on":""}" data-go2="${k}"><span class="ti">${ic(i)}</span>${n}</button>`).join("")}</div></div>`).join("")}`);
+  document.querySelectorAll("[data-go2]").forEach(b=>b.onclick=()=>{ const g = b.dataset.go2;
+    if (g==="settings") return openSettings();
+    closeSheet();
+    if (g==="tasbih"){ adkTab = "t"; setTab("adhkar"); }
+    else if (g==="qibla" || g==="fast"){ setTab("prayer"); setTimeout(()=>{ const x = g==="fast" ? $("#fastPanel") : [...document.querySelectorAll("#view h2")].find(h=>/القبلة/.test(h.textContent))?.closest("section"); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); }, 80); }
+    else setTab(g); });
+};
+// distinct Islamic icons on home tiles and nav
+NAV_MAIN.forEach(x=>{ if (x[0]==="prayer") x[2] = "mosque"; if (x[0]==="mushaf") x[2] = "quran"; if (x[0]==="adhkar") x[2] = "beads"; });
+/*<</islamic>>*/
 /*<<muhasaba>>*/
 /* ----- daily self-accounting (المحاسبة اليومية): deeds grouped by prayer, one tap to mark, streaks,
    synced with the prayer log (S.pl), adhkar counters (S.ad), khatma and memorisation ----- */

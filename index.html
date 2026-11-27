@@ -1194,6 +1194,17 @@ body{ background-image:var(--isl-pat); background-attachment:fixed }
 .mg-h::after{ content:""; flex:1; height:1px; background:var(--line) }
 .tile .ti{ border-radius:12px 12px 8px 8px / 16px 16px 8px 8px }
 /*<</islamic-css>>*/
+/*<<reciters-css>>*/
+.recl{display:grid;gap:8px}
+.rec{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;background:var(--raised);padding:6px 8px 6px 6px}
+.rec.on{border-color:var(--accent);background:var(--accent-soft)}
+.rec-pick{flex:1;display:flex;align-items:center;gap:10px;border:0;background:none;text-align:start;padding:4px;min-width:0}
+.rec-pick b{display:block;font-size:.98rem}
+.rec-pick small{color:var(--muted);font-size:.78rem}
+.rec-av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--sunk);color:var(--accent);flex:none}
+.rec.on .rec-av{background:var(--accent);color:var(--accent-ink)}
+#plSub{cursor:pointer}
+/*<</reciters-css>>*/
 </style>
 
 <div class="wrap">
@@ -1522,7 +1533,9 @@ const todayStr = ()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.g
 function currentDay(){
   if (!S.start) return 1;
   const ms = new Date(todayStr()) - new Date(S.start);
-  return Math.min(PLAN.length, Math.max(1, Math.floor(ms/86400000)+1));
+  // follow the calendar, but move ahead when the user finished portions early
+  let ahead = 0; for (const k in (S.done||{})) if (+k > ahead && +k <= PLAN.length) ahead = +k;
+  return Math.min(PLAN.length, Math.max(1, Math.floor(ms/86400000)+1, ahead+1));
 }
 function dateOf(day){
   if (!S.start) return "";
@@ -1578,8 +1591,22 @@ function mushafHTML(verses){
   }
   return html;
 }
-const AUDIO_REMOTE = "https://raw.githubusercontent.com/iptvchecker/content-everyayah/main/data/Husary_Mujawwad_64kbps/";
-const audioURL = (a, s=SUR) => s===2 ? `audio/002${String(a).padStart(3,"0")}.mp3` : AUDIO_REMOTE + String(s).padStart(3,"0") + String(a).padStart(3,"0") + ".mp3";
+// verse-by-verse recitations (EveryAyah, mirrored on GitHub with checksums); Husary mujawwad for al-Baqarah ships with the app
+const RECITERS = [
+  {id:"Husary_Mujawwad_64kbps", n:"محمود خليل الحصري", t:"مجوّد", mb:1},
+  {id:"Minshawy_Mujawwad_192kbps", n:"محمد صديق المنشاوي", t:"مجوّد", mb:3},
+  {id:"Abdul_Basit_Murattal_192kbps", n:"عبد الباسط عبد الصمد", t:"مرتّل", mb:3},
+  {id:"Abdullah_Basfar_192kbps", n:"عبد الله بصفر", t:"مرتّل", mb:3},
+  {id:"Hudhaify_128kbps", n:"علي الحذيفي", t:"مرتّل", mb:2},
+  {id:"ahmed_ibn_ali_al_ajamy_128kbps", n:"أحمد بن علي العجمي", t:"مرتّل", mb:2},
+  {id:"Maher_AlMuaiqly_64kbps", n:"ماهر المعيقلي", t:"مرتّل", mb:1},
+  {id:"Ghamadi_40kbps", n:"سعد الغامدي", t:"مرتّل", mb:0.6},
+];
+const AUDIO_BASE = "https://raw.githubusercontent.com/iptvchecker/content-everyayah/main/data/";
+const reciter = () => RECITERS.find(r=>r.id===(S.prefs&&S.prefs.reciter)) || RECITERS[0];
+const reciterName = () => { const r = reciter(); return `${r.n} (${r.t})`; };
+const audioURL = (a, s=SUR) => { const r = reciter(), k = String(s).padStart(3,"0") + String(a).padStart(3,"0");
+  return s===2 && r===RECITERS[0] ? `audio/${k}.mp3` : AUDIO_BASE + r.id + "/" + k + ".mp3"; };
 
 /* ---------- in-page player (Husary, mujawwad) ---------- */
 const PL = {q:[], i:0, left:1, timer:null, label:"", el:new Audio(), waiting:false};
@@ -1596,7 +1623,7 @@ function plUI(){
   if (!PL.q.length) return;
   $("#plNow").textContent = `الآية ${AR(a)}` + (PL.q.length>1 ? ` · ${AR(PL.i+1)} من ${AR(PL.q.length)}` : "");
   const rep = S.prefs.rep, done = rep - PL.left + 1;
-  $("#plSub").innerHTML = PL.waiting ? `<span class="turn">دورك: ردّد الآية الآن…</span>` : `${PL.label} · الحصري (مجوّد)${rep>1?` · التكرار ${done}/${rep}`:""}`;
+  $("#plSub").innerHTML = PL.waiting ? `<span class="turn">دورك: ردّد الآية الآن…</span>` : `${PL.label} · ${reciterName()}${rep>1?` · التكرار ${done}/${rep}`:""}`;
   $("#plPlay").innerHTML = (PL.el.paused && !PL.waiting) ? ic("play") : ic("pause");
   $("#plRep").value = String(rep); $("#plRate").value = String(S.prefs.rate); $("#plGap").checked = S.prefs.gap; $("#plLoop").checked = S.prefs.loop;
 }
@@ -1850,7 +1877,12 @@ function bindToday(p){
   $("#playDay").onclick = ()=>play(p.verses, `ورد اليوم ${p.day}`);
   document.querySelectorAll("[data-playrev]").forEach(b=>b.onclick = ()=>{ const q = NEWS[+b.dataset.playrev]; play(q.verses, `ورد اليوم ${q.day}`); });
   bindMuhasaba(p.day);
-  $("#doneBtn").onclick = ()=>{ if (S.done[p.day]) delete S.done[p.day]; else S.done[p.day]=todayStr(); save(); render(); };
+  $("#doneBtn").onclick = ()=>{
+    if (S.done[p.day]){ delete S.done[p.day]; save(); render(); return; }
+    S.done[p.day] = todayStr(); save(); buzz();
+    if (p.day < PLAN.length){ viewDay = p.day + 1; render(); scrollTo({top:0, behavior:"smooth"}); toast(`بارك الله فيك، هذا الورد التالي: اليوم ${AR(viewDay)}`); }
+    else { render(); toast("أتممت الخطة كلها، ثبّتك الله"); }
+  };
   document.querySelectorAll("[data-step]").forEach(cb=>cb.onchange = ()=>{ const d = S.steps[p.day] = S.steps[p.day]||{}; d[cb.dataset.step]=cb.checked; cb.nextElementSibling.className = cb.checked?"done":""; save(); });
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick = ()=>{ mode = b.dataset.mode; revealed = new Set(); hintCount = 0; buildTestOrder(p); render(); });
   const fr = $("#fadeR"); if (fr) fr.oninput = ()=>{ fade = +fr.value; revealed = new Set(); render(); };
@@ -3133,7 +3165,7 @@ function appAfterRender(){
   document.body.dataset.tab = tab;
   const hs = $("#heroSur"); if (hs) hs.onclick = ()=>setTab("surahs");
   document.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>setTab(b.dataset.gotab));
-  window.APPSUR = {n:SUR, name:DATA.name, count:V.length, mb:AUDIO_MB[SUR], url:a=>audioURL(a)};
+  window.APPSUR = {n:SUR, name:DATA.name, count:V.length, get mb(){ return AUDIO_MB[SUR]*reciter().mb; }, url:a=>audioURL(a)};
   if (tab!=="today" && document.body.classList.contains("reading")) document.body.classList.remove("reading");
   renderAppbar(); renderBnav();
   if (tab==="today") enhanceToday();
@@ -3143,7 +3175,7 @@ function appAfterRender(){
 if ("mediaSession" in navigator){
   const ms = navigator.mediaSession;
   const meta = ()=>{ const a = PL.q[PL.i]; if (!a) return;
-    try { ms.metadata = new MediaMetadata({title:`سورة ${DATA.name} · الآية ${AR(a)}`, artist:"محمود خليل الحصري (مجوّد)", album: PL.label || "رفيق حفظ القرآن",
+    try { ms.metadata = new MediaMetadata({title:`سورة ${DATA.name} · الآية ${AR(a)}`, artist:reciterName(), album: PL.label || "رفيق حفظ القرآن",
       artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"},{src:"icon-192.png",sizes:"192x192",type:"image/png"}]}); } catch(e){} };
   PL.el.addEventListener("play", ()=>{ meta(); ms.playbackState = "playing"; });
   PL.el.addEventListener("pause", ()=>{ ms.playbackState = "paused"; });
@@ -3204,7 +3236,7 @@ function openSurah(n, pace){
       <div class="small muted">${ayaN(s.ayat)} · ${s.type} · الصفحات ${AR(s.p1)}${s.p2!==s.p1?"–"+AR(s.p2):""} · الجزء ${AR(s.j1)}${s.j2!==s.j1?"–"+AR(s.j2):""}</div></div></div>
     <div><b>كم تحفظ كل يوم؟</b><div class="paces">${opts.map(o=>`<button class="pace ${o.p===curPace?"on":""}" data-pace="${o.p}"><b>${o.l}</b><small>${daysAr(o.d.days)}</small>${o.p===rec?`<span class="rec">مقترح</span>`:""}</button>`).join("")}</div>
       <p class="small muted" style="margin-top:6px">الخطة: ${daysAr(planDays(n,curPace).news)} للحفظ، مع أيام مراجعة بعد كل خمسة أيام، وتسميع السورة كاملة في آخرها.</p></div>
-    <p class="small muted">${n===2?"تلاوة الحصري لهذه السورة مضمّنة في التطبيق.":`تلاوة الحصري لهذه السورة نحو ${mbAr(AUDIO_MB[n])} ميغابايت، تُجلب عند الاستماع أول مرة، ويمكنك تحميلها كلها من «تقدّمي» لتعمل بدون إنترنت.`}</p>
+    <p class="small muted">${n===2&&reciter()===RECITERS[0]?"تلاوة الحصري لهذه السورة مضمّنة في التطبيق.":`تلاوة ${reciter().n} لهذه السورة نحو ${mbAr(AUDIO_MB[n]*reciter().mb)} ميغابايت، تُجلب عند الاستماع أول مرة، ويمكنك تحميلها كلها من «تقدّمي» لتعمل بدون إنترنت.`}</p>
     ${started && x.pace!==curPace?`<p class="ptip small">لديك تقدّم في هذه السورة بمقدار ${paceName(x.pace)} يومياً. تغيير المقدار يبدأ خطتها من جديد.</p>`:""}
     <div class="row">
       ${started && x.pace===curPace ? `<button class="btn primary" id="surGo">${ic("play")}تابع حفظ السورة</button>` :
@@ -4275,6 +4307,44 @@ renderPrayer = function(){
 // home quick links to sections that now sit inside collapsible panels
 const _openPanel = id => { const x = $(id); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); };
 document.addEventListener("click", e=>{ const b = e.target.closest('[data-hgo="fast"]'); if (b) setTimeout(()=>_openPanel("#fastPanel"), 120); }, true);
+/*<<reciters>>*/
+/* choose the reciter: a sheet listing masters of tajweed, each with a short sample */
+let recSample = null;
+function openReciters(back){
+  const cur = reciter();
+  openSheet(`<h2 id="shTitle">اختر القارئ</h2>
+    <p class="small muted" style="margin:0 2px 10px">قرّاء متقنون للتجويد، والتلاوة آية آية حتى يعمل التكرار والتسميع. اضغط ${ic("play")} لتسمع الفاتحة.</p>
+    <div class="recl">${RECITERS.map(r=>`<div class="rec ${r===cur?"on":""}">
+      <button class="rec-pick" data-rec="${r.id}"><span class="rec-av">${ic(r===cur?"check":"mic")}</span><span><b>${r.n}</b><small>${r.t}${r===RECITERS[0]?" · البقرة مضمّنة في التطبيق":""}</small></span></button>
+      <button class="btn icon rec-play" data-recp="${r.id}" aria-label="استمع إلى ${r.n}">${ic("play")}</button></div>`).join("")}</div>`);
+  const stopS = ()=>{ if (recSample){ recSample.pause(); recSample = null; } document.querySelectorAll(".rec-play").forEach(b=>b.innerHTML = ic("play")); };
+  document.querySelectorAll("[data-recp]").forEach(b=>b.onclick = ()=>{
+    const was = b.dataset.playing==="1"; stopS(); document.querySelectorAll("[data-recp]").forEach(x=>x.dataset.playing="");
+    if (was) return;
+    recSample = new Audio(AUDIO_BASE + b.dataset.recp + "/001001.mp3"); let i = 1;
+    recSample.onended = ()=>{ if (++i > 4 || !recSample) return stopS(); recSample.src = AUDIO_BASE + b.dataset.recp + "/00100" + i + ".mp3"; recSample.play().catch(()=>{}); };
+    recSample.play().catch(()=>{ toast("تعذّر التشغيل، تحقّق من الاتصال"); stopS(); });
+    b.dataset.playing = "1"; b.innerHTML = ic("pause");
+  });
+  document.querySelectorAll("[data-rec]").forEach(b=>b.onclick = ()=>{
+    stopS(); S.prefs.reciter = b.dataset.rec; save(); buzz();
+    try { if (PL.el && !PL.el.paused) PL.el.pause(); if (PL.q && PL.q.length) plUI(); } catch(e){}
+    toast(`القارئ: ${reciterName()}`);
+    if (back) back(); else { closeSheet(); render(); }
+  });
+}
+Object.assign(ICONS, { mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>' });
+if (!ICONS.pause) ICONS.pause = '<rect x="6.5" y="5" width="3.5" height="14" rx="1"/><rect x="14" y="5" width="3.5" height="14" rx="1"/>';
+const _osRec = openSettings;
+openSettings = function(){ _osRec();
+  const rows = document.querySelectorAll(".set .set-r"); const after = [...rows].find(r=>/سرعة التلاوة/.test(r.textContent)) || rows[0];
+  if (!after) return;
+  after.insertAdjacentHTML("beforebegin", `<div class="set-r"><span>القارئ</span><button class="btn" id="setRec">${ic("mic")}${reciter().n}</button></div>`);
+  document.getElementById("setRec").onclick = ()=>openReciters(openSettings);
+};
+// tap the reciter name under the player to change it
+document.addEventListener("click", e=>{ if (e.target.closest("#plSub") && !PL.waiting) openReciters(); });
+/*<</reciters>>*/
 /*<<android>>*/
 /* Android app: same native alarm bridge as iOS, with Android wording */
 if (window.NATIVE_APP && window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform()==="android"){

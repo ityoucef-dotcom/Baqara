@@ -1293,6 +1293,12 @@ mark.lb-q{background:var(--gold-soft);color:inherit;border-bottom:2px solid var(
 .about-card a{display:inline-flex;align-items:center;justify-content:center;gap:6px;color:inherit;font-weight:600;text-decoration:none}
 .about-card a svg{width:16px;height:16px}
 .about-card small{opacity:.7}
+.lb-cats{margin:-4px 0 2px}
+.lb-cats .chip small{opacity:.65;margin-inline-start:3px}
+.lb-cats .chip.on{border-color:var(--good);background:color-mix(in oklab,var(--good) 16%,var(--raised))}
+a.lb-ms{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px}
+a.lb-ms .btn{align-self:flex-start}
+.lb-msd{display:block;margin-top:4px;line-height:1.6}
 /*<</library-css>>*/
 </style>
 
@@ -4397,7 +4403,7 @@ renderPrayer = function(){
 const _openPanel = id => { const x = $(id); if (!x) return; const d = x.querySelector("details.accd"); if (d) d.open = true; x.scrollIntoView({behavior:"smooth", block:"start"}); };
 document.addEventListener("click", e=>{ const b = e.target.closest('[data-hgo="fast"]'); if (b) setTimeout(()=>_openPanel("#fastPanel"), 120); }, true);
 /*<<library>>*/
-/* ----- المكتبة: كتب ابن تيمية وسير الصحابة + كتب الحديث (البخاري ومسلم والترمذي) ----- */
+/* ----- المكتبة: أمهات كتب السنة (OpenITI) + كتب الحديث التسعة إلا مسند أحمد والدارمي (hadith-api) ----- */
 Object.assign(ICONS, {
   library:'<path d="M4 19.5V5a1 1 0 0 1 1-1h3v15.5M8 4h3v15.5M11 5.5l3-1 4.2 14.5-3 .9z"/><path d="M3 19.5h18"/>',
   scroll:'<path d="M7 4h11a2 2 0 0 1 0 4h-1v10a2 2 0 0 1-2 2H6a2 2 0 0 1 0-4h1z"/><path d="M7 16V6a2 2 0 0 0-4 0v1h4M10 9h5M10 12h5"/>',
@@ -4409,9 +4415,11 @@ Object.assign(ICONS, {
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
 });
 const LIB_DIR = "data/";
-const HCOLS = [["bukhari","صحيح البخاري"],["muslim","صحيح مسلم"],["tirmidhi","جامع الترمذي"]];
+const HCOLS = [["bukhari","صحيح البخاري"],["muslim","صحيح مسلم"],["abudawud","سنن أبي داود"],["tirmidhi","جامع الترمذي"],["nasai","سنن النسائي"],["ibnmajah","سنن ابن ماجه"],["malik","موطأ الإمام مالك"]];
+const HGRADED = new Set(["tirmidhi","abudawud","nasai","ibnmajah"]);
+const LCATS = [["السيرة","السيرة النبوية والشمائل","star"],["العقيدة","العقيدة","shield"],["الحديث وشروحه","الحديث وشروحه","scroll"],["التفسير","التفسير","book"],["التزكية والرقائق","التزكية والرقائق","heart"],["الفقه","الفقه","book"],["ابن تيمية","كتب شيخ الإسلام ابن تيمية","book"],["الصحابة","سير الصحابة","scroll"]];
 const LCOL = [["y","#f6d86b"],["g","#8fdca8"],["b","#9cc8f5"],["k","#f3a6c8"]];
-const LB = { view:"home", seg:"books", q:"", book:null, ch:0, col:null, hb:null, hq:"", hf:"all", lim:25, sel:null, act:null, cat:null };
+const LB = { bc:"", view:"home", seg:"books", q:"", book:null, ch:0, col:null, hb:null, hq:"", hf:"all", lim:25, sel:null, act:null, cat:null };
 const LBD = { books:{}, hcol:{}, norm:{} };
 function LS(){ S.lib = S.lib || {}; S.lib.hl = S.lib.hl || {}; S.lib.nt = S.lib.nt || {}; S.lib.pos = S.lib.pos || {}; return S.lib; }
 // Arabic search: ignore harakat, tatweel and letter variants
@@ -4436,7 +4444,7 @@ async function lbLoad(kind, id){
     try { const c = await caches.open("lib-v1"); await c.put(new URL(url, location.href).pathname, r.clone()); } catch(e){} }
   return store[id] = await r.json();
 }
-function lbSize(kind, id){ const z = {sahaba:3.9, bukhari:8.5, muslim:7.5, tirmidhi:5.5}; return z[id] ? `${AR(z[id])} م.ب` : "أقل من ١ م.ب"; }
+function lbSize(kind, id){ const z = {"sira_hisham": 2.6, "riyad": 1.2, "sacdi": 5.3, "minhaj": 1.0, "lataif": 1.1, "ibn_kathir": 15.2, "zad": 5.4, "adhkar_nawawi": 1.1, "jamic_ulum": 1.8, "sahaba": 4.0, "ibnmajah": 3.8, "abudawud": 5.2, "tirmidhi": 5.5, "muslim": 7.5, "malik": 1.7, "nasai": 5.2, "bukhari": 8.5}; return z[id] ? `${AR(z[id])} م.ب` : "أقل من ١ م.ب"; }
 
 /* ---------- text with highlights ---------- */
 function lbMarked(key, text){
@@ -4549,11 +4557,11 @@ const HTOP = [
 const hTopic = t => { for (const [re, s] of HTOP) if (re.test(t)) return s; return ""; };
 function hGradeCls(g){ if (!g) return ""; if (/ضعيف|موضوع|منكر|شاذ/.test(g)) return "bad"; if (/صحيح|حسن/.test(g)) return "ok"; return "mid"; }
 function hCard(id, i, h, q){
-  const key = `h:${id}:${i}`, g = id==="tirmidhi" ? h[3] : "صحيح";
+  const key = `h:${id}:${i}`, g = HGRADED.has(id) ? h[3] : (id==="malik" ? "" : "صحيح");
   const body = q ? `<span class="lb-t">${lbSnippet(h[2], q, 160)}</span>` : `<span class="lb-t">${lbMarked(key, h[2])}</span>`;
   const H = LS().hl[key], nt = LS().nt[key];
   return `<article class="lb-p lb-h ${H&&H.c?"lb-"+H.c+"bg":""}" data-k="${key}">
-    <div class="lb-hh"><span class="lb-num">${AR(Math.floor(h[0]))}</span>${g?`<span class="lb-gr ${hGradeCls(g)}">${g}${id==="tirmidhi"?` <small>(الألباني)</small>`:""}</span>`:""}${q?`<button class="btn lb-open" data-hopen="${i}">فتح في بابه</button>`:""}</div>
+    <div class="lb-hh"><span class="lb-num">${AR(Math.floor(h[0]))}</span>${g?`<span class="lb-gr ${hGradeCls(g)}">${g}${HGRADED.has(id)?` <small>(الألباني)</small>`:""}</span>`:""}${q?`<button class="btn lb-open" data-hopen="${i}">فتح في بابه</button>`:""}</div>
     ${body}${nt?`<div class="lb-note">${ic("pen")}${esc(nt)}</div>`:""}</article>`;
 }
 function hNormAll(id){ if (!LBD.norm[id]) LBD.norm[id] = LBD.hcol[id].h.map(h=>lbNorm(h[2])); return LBD.norm[id]; }
@@ -4567,19 +4575,21 @@ async function renderLibrary(keep){
     if (LB.view === "home"){
       const cat = await lbCat();
       const q = lbNorm(LB.q.trim());
-      const books = cat.books.filter(b=>!q || lbNorm(b.title + " " + b.sum + " " + b.tag + " " + b.cat).includes(q));
+      const books = cat.books.filter(b=>!q || lbNorm(b.title + " " + b.sum + " " + b.tag + " " + b.cat + " " + (b.by||"") + " " + b.author).includes(q));
       const saved = {}; await Promise.all([...cat.books.map(b=>lbIsSaved("library", b.id).then(x=>saved[b.id]=x)), ...HCOLS.map(([id])=>lbIsSaved("hadith", id).then(x=>saved[id]=x))]);
-      const card = b=>`<article class="lb-card"><button class="lb-cmain" data-lbopen="${b.id}"><span class="lb-ci">${ic(b.cat==="الصحابة"?"scroll":"book")}</span><span><b>${b.title}</b><small>${b.cat==="الصحابة"?"الذهبي":"ابن تيمية"} · ${b.tag}</small></span></button>
+      const card = b=>`<article class="lb-card"><button class="lb-cmain" data-lbopen="${b.id}"><span class="lb-ci">${ic((LCATS.find(c=>c[0]===b.cat)||[])[2]||"book")}</span><span><b>${b.title}</b><small>${b.by||""} · ${b.tag}</small></span></button>
         <div class="lb-cact">${saved[b.id]?`<span class="lb-saved">${ic("check")}محمّل</span>`:`<button class="btn" data-lbdl="${b.id}">${ic("download")}تحميل <small>${lbSize("library", b.id)}</small></button>`}<button class="btn primary" data-lbopen="${b.id}">قراءة</button></div></article>`;
       v.innerHTML = `<div class="wrap lb" style="gap:14px">
-        <section class="lb-hero"><span class="lb-hi">${ic("library")}</span><div><b>المكتبة</b><small>كتب شيخ الإسلام ابن تيمية، وسير الصحابة، وكتب الحديث مع البحث والتلوين والملاحظات</small></div></section>
+        <section class="lb-hero"><span class="lb-hi">${ic("library")}</span><div><b>المكتبة</b><small>أمهات كتب السنة: السيرة والعقيدة والحديث والتفسير والتزكية، مع البحث والتلوين والملاحظات</small></div></section>
         <div class="seg lb-seg"><button class="${LB.seg==="books"?"on":""}" data-lbseg="books">${ic("book")}الكتب</button><button class="${LB.seg==="hadith"?"on":""}" data-lbseg="hadith">${ic("scroll")}كتب الحديث</button><button class="${LB.seg==="mine"?"on":""}" data-lbseg="mine">${ic("pen")}ملاحظاتي</button></div>
         ${LB.seg==="books" ? `<label class="lb-search">${ic("search")}<input id="lbQ" type="search" placeholder="ابحث عن كتاب أو موضوع: الصبر، التوبة، أبو بكر…" value="${esc(LB.q)}"></label>
-          ${["ابن تيمية","الصحابة"].map(c=>{ const L = books.filter(b=>b.cat===c); return L.length?`<h2 class="hsec">${c==="الصحابة"?"سير الصحابة":"كتب شيخ الإسلام ابن تيمية"}</h2><div class="lb-list">${L.map(card).join("")}</div>`:""; }).join("") || `<p class="muted">لا يوجد كتاب بهذا الاسم.</p>`}
+          <div class="chips-x lb-cats"><button class="chip ${!LB.bc?"on":""}" data-lbcat="">الكل <small>${AR(cat.books.length)}</small></button>${LCATS.map(([c,t])=>`<button class="chip ${LB.bc===c?"on":""}" data-lbcat="${c}">${t}</button>`).join("")}${cat.mss?`<button class="chip ${LB.bc==="mss"?"on":""}" data-lbcat="mss">مخطوطات</button>`:""}</div>
+          ${LCATS.filter(([c])=>!LB.bc||LB.bc===c).map(([c,t])=>{ const L = books.filter(b=>b.cat===c); return L.length?`<h2 class="hsec">${t}</h2><div class="lb-list">${L.map(card).join("")}</div>`:""; }).join("") || (LB.bc==="mss"?"":`<p class="muted">لا يوجد كتاب بهذا الاسم.</p>`)}
+          ${cat.mss && (!LB.bc||LB.bc==="mss") ? `<h2 class="hsec">مخطوطات قديمة</h2><p class="small muted">صور مخطوطات أصلية محفوظة في مكتبات عالمية، تُفتح على موقع المكتبة (تحتاج إنترنت).</p><div class="lb-list">${cat.mss.filter(m=>!q||lbNorm(m.t+" "+m.d).includes(q)).map(m=>`<a class="lb-card lb-ms" href="${m.url}" target="_blank" rel="noopener"><span class="lb-cmain"><span class="lb-ci">${ic("scroll")}</span><span><b>${esc(m.t)}</b><small>${esc(m.date)} · ${esc(m.lib)}</small><small class="lb-msd">${esc(m.d)}</small></span></span><span class="btn">${ic("ext")}عرض المخطوطة</span></a>`).join("")}</div>` : ""}
           <p class="small muted">${esc(cat.note)}</p>`
-        : LB.seg==="hadith" ? `<div class="lb-list">${HCOLS.map(([id,t])=>`<article class="lb-card"><button class="lb-cmain" data-hcol="${id}"><span class="lb-ci">${ic("scroll")}</span><span><b>${t}</b><small>${id==="tirmidhi"?"مع حكم الشيخ الألباني على كل حديث":"كل أحاديثه المسندة صحيحة"}</small></span></button>
+        : LB.seg==="hadith" ? `<div class="lb-list">${HCOLS.map(([id,t])=>`<article class="lb-card"><button class="lb-cmain" data-hcol="${id}"><span class="lb-ci">${ic("scroll")}</span><span><b>${t}</b><small>${HGRADED.has(id)?"مع حكم الشيخ الألباني على كل حديث":id==="malik"?"أقدم ما وصلنا من كتب السنة المصنفة، رواية يحيى الليثي":"كل أحاديثه المسندة صحيحة"}</small></span></button>
             <div class="lb-cact">${saved[id]?`<span class="lb-saved">${ic("check")}محمّل</span>`:`<button class="btn" data-hdl="${id}">${ic("download")}تحميل <small>${lbSize("hadith", id)}</small></button>`}<button class="btn primary" data-hcol="${id}">تصفّح</button></div></article>`).join("")}</div>
-          <p class="small muted">النصوص من مشروع hadith-api المفتوح، وأحكام الترمذي من تحقيق الشيخ الألباني. زر «الشرح» يفتح شروح الحديث في موسوعة الدرر السنية (يحتاج إنترنت).</p>`
+          <p class="small muted">النصوص من مشروع hadith-api المفتوح، وأحكام السنن الأربع من تحقيق الشيخ الألباني. زر «الشرح» يفتح شروح الحديث في موسوعة الدرر السنية (يحتاج إنترنت).</p>`
         : lbMineHTML()}
       </div>`;
       const qi = $("#lbQ"); if (qi){ qi.oninput = ()=>{ LB.q = qi.value; clearTimeout(qi._t); qi._t = setTimeout(async ()=>{ const pos = qi.selectionStart; await renderLibrary(true); const n = $("#lbQ"); if (n){ n.focus(); n.setSelectionRange(pos,pos); } }, 250); }; }
@@ -4624,8 +4634,8 @@ async function renderLibrary(keep){
     else if (LB.view === "col" || LB.view === "hbook"){
       v.innerHTML = `<div class="wrap lb"><p class="muted">${ic("download")} جارٍ تحميل ${HCOLS.find(x=>x[0]===LB.col)[1]}… قد يستغرق ذلك قليلاً أول مرة.</p></div>`;
       const C = await lbLoad("hadith", LB.col), id = LB.col;
-      const pass = h => id!=="tirmidhi" || LB.hf==="all" || (LB.hf==="ok" ? hGradeCls(h[3])==="ok" : hGradeCls(h[3])==="bad");
-      const filt = id==="tirmidhi" ? `<div class="seg lb-seg sm">${[["all","الكل"],["ok","الصحيح والحسن"],["bad","الضعيف"]].map(([k,l])=>`<button class="${LB.hf===k?"on":""}" data-hf="${k}">${l}</button>`).join("")}</div>` : "";
+      const pass = h => !HGRADED.has(id) || LB.hf==="all" || (LB.hf==="ok" ? hGradeCls(h[3])==="ok" : hGradeCls(h[3])==="bad");
+      const filt = HGRADED.has(id) ? `<div class="seg lb-seg sm">${[["all","الكل"],["ok","الصحيح والحسن"],["bad","الضعيف"]].map(([k,l])=>`<button class="${LB.hf===k?"on":""}" data-hf="${k}">${l}</button>`).join("")}</div>` : "";
       if (LB.view === "col"){
         const q = LB.hq.trim(); let list = "";
         if (q.length >= 2){
@@ -4668,7 +4678,7 @@ function lbMineHTML(){
 }
 document.addEventListener("click", async e=>{
   if (tab !== "library") return;
-  const t = e.target.closest("[data-lb],[data-lbseg],[data-lbopen],[data-lbdl],[data-hdl],[data-hcol],[data-lbt],[data-lbch],[data-hb],[data-hf],[data-hmore],[data-hopen],[data-mgo]"); if (!t) return;
+  const t = e.target.closest("[data-lb],[data-lbseg],[data-lbcat],[data-lbopen],[data-lbdl],[data-hdl],[data-hcol],[data-lbt],[data-lbch],[data-hb],[data-hf],[data-hmore],[data-hopen],[data-mgo]"); if (!t) return;
   const d = t.dataset; buzz();
   if (d.lb === "back"){
     if (LB.view==="chapter"){ LB.view = "book"; LB.btab = LB.btab || "toc"; }
@@ -4678,6 +4688,7 @@ document.addEventListener("click", async e=>{
   }
   if (d.lbseg){ LB.seg = d.lbseg; return renderLibrary(); }
   if (d.lbopen){ LB.book = d.lbopen; LB.view = "book"; LB.btab = "sum"; LB.bq = ""; return renderLibrary(); }
+  if (d.lbcat != null){ LB.bc = d.lbcat; return renderLibrary(true); }
   if (d.lbdl || d.hdl){ t.disabled = true; t.innerHTML = "جارٍ التحميل…"; try { await lbLoad(d.lbdl?"library":"hadith", d.lbdl||d.hdl); toast("حُمّل وصار يعمل بدون إنترنت"); } catch(_){ toast("تعذّر التحميل"); } return renderLibrary(true); }
   if (d.hcol){ LB.col = d.hcol; LB.view = "col"; LB.hq = ""; LB.lim = 25; LB.hf = "all"; return renderLibrary(); }
   if (d.lbt){ LB.btab = d.lbt; return renderLibrary(); }
@@ -4702,8 +4713,8 @@ renderHome = function(){ _rhLib();
   const wrap = $("#view .wrap.home"); if (!wrap) return;
   const secs = [...wrap.querySelectorAll(".hsec")], quran = secs.find(h=>/القرآن/.test(h.textContent));
   const html = `<h2 class="hsec">العلم الشرعي</h2><div class="hgrid lb-hg">
-    <button class="htile" data-lbgo="books" style="--hue:30"><span class="hti">${ic("library")}</span><b>المكتبة</b><small>ابن تيمية وسير الصحابة</small></button>
-    <button class="htile" data-lbgo="hadith" style="--hue:200"><span class="hti">${ic("scroll")}</span><b>كتب الحديث</b><small>البخاري ومسلم والترمذي</small></button>
+    <button class="htile" data-lbgo="books" style="--hue:30"><span class="hti">${ic("library")}</span><b>المكتبة</b><small>السيرة والعقيدة والتفسير والتزكية</small></button>
+    <button class="htile" data-lbgo="hadith" style="--hue:200"><span class="hti">${ic("scroll")}</span><b>كتب الحديث</b><small>الصحيحان والسنن والموطأ</small></button>
     <button class="htile" data-lbgo="mine" style="--hue:300"><span class="hti">${ic("pen")}</span><b>ملاحظاتي</b><small>ما لوّنته وكتبته</small></button></div>`;
   const grid = quran && quran.nextElementSibling; if (grid) grid.insertAdjacentHTML("afterend", html); else wrap.insertAdjacentHTML("beforeend", html);
   wrap.querySelectorAll("[data-lbgo]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); buzz(); LB.seg = b.dataset.lbgo; LB.view = "home"; setTab("library"); }));

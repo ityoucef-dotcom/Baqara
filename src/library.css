@@ -59,3 +59,8 @@ mark.lb-q{background:var(--gold-soft);color:inherit;border-bottom:2px solid var(
 .lb-cols .lb-clr{background:var(--sunk);display:grid;place-items:center;color:var(--muted)}
 .lb-acts{display:flex;gap:6px;flex-wrap:wrap}.lb-acts .btn{min-height:34px;font-size:.82rem;padding:4px 10px}.lb-acts .btn.icon{margin-inline-start:auto}
 .lb-hg{grid-template-columns:repeat(3,minmax(0,1fr))}
+.about-card{margin:16px 0 4px;padding:14px;border-radius:16px;border:1px solid var(--line,#ddd);display:flex;flex-direction:column;gap:6px;text-align:center}
+.about-card p{margin:0}
+.about-card a{display:inline-flex;align-items:center;justify-content:center;gap:6px;color:inherit;font-weight:600;text-decoration:none}
+.about-card a svg{width:16px;height:16px}
+.about-card small{opacity:.7}

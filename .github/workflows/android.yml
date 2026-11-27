@@ -40,13 +40,8 @@ jobs:
           RAFIQ_KEYSTORE_PASSWORD: ${{ secrets.RAFIQ_KEYSTORE_PASSWORD }}
         run: |
           chmod +x gradlew
-          if [ "$SIGNED" = "1" ]; then
-            ./gradlew --no-daemon assembleRelease
-            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Rafiq.apk"
-          else
-            ./gradlew --no-daemon assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/Rafiq.apk"
-          fi
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Rafiq.apk"
           ls -lh "$RUNNER_TEMP/Rafiq.apk"
       - uses: actions/upload-artifact@v4
         with:
@@ -54,7 +49,6 @@ jobs:
           path: ${{ runner.temp }}/Rafiq.apk
           compression-level: 0
       - name: Publish to the "android" release
-        if: env.SIGNED == '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

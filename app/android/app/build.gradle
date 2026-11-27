@@ -24,12 +24,18 @@ android {
                 storePassword System.getenv("RAFIQ_KEYSTORE_PASSWORD")
                 keyAlias System.getenv("RAFIQ_KEY_ALIAS") ?: "rafiq"
                 keyPassword System.getenv("RAFIQ_KEYSTORE_PASSWORD")
+            } else {
+                // public build key kept in the repo (approved by the owner) so each APK installs over the last
+                storeFile rootProject.file("rafiq-public.keystore")
+                storePassword "android"
+                keyAlias "rafiq"
+                keyPassword "android"
             }
         }
     }
     buildTypes {
         release {
-            if (System.getenv("RAFIQ_KEYSTORE")) signingConfig signingConfigs.release
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -309,3 +309,15 @@ renderHome = function(){ _rhLib();
   const grid = quran && quran.nextElementSibling; if (grid) grid.insertAdjacentHTML("afterend", html); else wrap.insertAdjacentHTML("beforeend", html);
   wrap.querySelectorAll("[data-lbgo]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); buzz(); LB.seg = b.dataset.lbgo; LB.view = "home"; setTab("library"); }));
 };
+
+/* ===== about / credits ===== */
+Object.assign(ICONS,{mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'});
+const ABOUT_HTML = ()=>`<div class="about-card"><b>عن البرنامج</b>
+  <p>رفيق المسلم — من تصميم وإعداد <strong>بلهادية يوسف</strong></p>
+  <a href="mailto:ityoucef@gmail.com">${ic("mail")}ityoucef@gmail.com</a>
+  <a href="tel:+966540606677" dir="ltr">${ic("phone")}+966 54 060 6677</a>
+  <small>© ${new Date().getFullYear()} بلهادية يوسف — برنامج مفتوح المصدر بترخيص GPL-3.0</small></div>`;
+const _osAbout = openSettings;
+openSettings = function(){ _osAbout();
+  const set = document.querySelector(".set"); if (set && !set.querySelector(".about-card")) set.insertAdjacentHTML("beforeend", ABOUT_HTML());
+};

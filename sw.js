@@ -1,12 +1,12 @@
 /* offline cache for the Baqarah companion: app shell precached, recitations cached on demand or by "download all" */
-const SHELL = "shell-72b73da4", AUDIO = "audio-v1";
+const SHELL = "shell-5727f4a7", AUDIO = "audio-v1", LIB = "lib-v1";
 const SHELL_FILES = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "adhan/madinah.mp3"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== SHELL && k !== AUDIO).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== SHELL && k !== AUDIO && k !== LIB).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 // Safari's <audio> asks for byte ranges; answer them from the cached full file
@@ -41,6 +41,11 @@ self.addEventListener("fetch", e => {
       }
       return ranged(req, hit);
     })());
+    return;
+  }
+  // library books and hadith collections: kept once downloaded (page asks via the "lib-v1" cache too)
+  if (/\/data\/(library|hadith)\//.test(url.pathname)){
+    e.respondWith(caches.open(LIB).then(async c => (await c.match(url.pathname, {ignoreSearch:true})) || fetch(req).then(r => { if (r.ok) c.put(url.pathname, r.clone()); return r; })));
     return;
   }
   // app shell: cached copy first, refresh it in the background

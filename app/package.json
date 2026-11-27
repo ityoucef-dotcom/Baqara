@@ -1,12 +1,14 @@
 {
-  "name": "rafiq-quran-ios",
+  "name": "rafiq-quran-app",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "www": "node scripts/make-www.mjs",
-    "sync": "npm run www && npx cap sync ios"
+    "sync": "npm run www && npx cap sync ios",
+    "android": "npm run www && node scripts/android-res.mjs && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
     "@capacitor/core": "8.6.0",
     "@capacitor/ios": "8.6.0"
   },

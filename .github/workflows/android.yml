@@ -1,0 +1,63 @@
+name: Android app
+on:
+  push:
+    branches: [ios-app]
+    paths: ["app/**", "index.html", "tafsir/**", "adhan/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Web assets, sounds and Capacitor sync
+        working-directory: app
+        run: |
+          npm ci
+          npm run android
+      - name: Signing key (from repository secrets, when set)
+        env:
+          KS: ${{ secrets.RAFIQ_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/rafiq.jks"
+            echo "RAFIQ_KEYSTORE=$RUNNER_TEMP/rafiq.jks" >> "$GITHUB_ENV"
+            echo "SIGNED=1" >> "$GITHUB_ENV"
+          fi
+      - name: Build APK
+        working-directory: app/android
+        env:
+          RAFIQ_KEYSTORE_PASSWORD: ${{ secrets.RAFIQ_KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          if [ "$SIGNED" = "1" ]; then
+            ./gradlew --no-daemon assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Rafiq.apk"
+          else
+            ./gradlew --no-daemon assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/Rafiq.apk"
+          fi
+          ls -lh "$RUNNER_TEMP/Rafiq.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rafiq-apk
+          path: ${{ runner.temp }}/Rafiq.apk
+          compression-level: 0
+      - name: Publish to the "android" release
+        if: env.SIGNED == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android >/dev/null 2>&1 || gh release create android --title "تطبيق أندرويد" --notes "نزّل Rafiq.apk وافتحه على هاتف أندرويد لتثبيته. يُحدَّث هذا الإصدار تلقائياً مع كل تعديل." --target ios-app
+          gh release upload android "$RUNNER_TEMP/Rafiq.apk" --clobber
+          gh release edit android --notes "نزّل Rafiq.apk وافتحه على هاتف أندرويد لتثبيته. النسخة 1.${GITHUB_RUN_NUMBER}، يُحدَّث هذا الإصدار تلقائياً مع كل تعديل."
